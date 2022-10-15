@@ -8,13 +8,13 @@
 		<version>2.7.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.ittalents</groupId>
-	<artifactId>mvc</artifactId>
+	<groupId>com.9gag</groupId>
+	<artifactId>_9gag</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>mvc</name>
-	<description>Demo project for Spring Boot</description>
+	<name>9gag</name>
+	<description>9gag Final project ITTalents</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>18</java.version>
 	</properties>
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.modelmapper/modelmapper -->
