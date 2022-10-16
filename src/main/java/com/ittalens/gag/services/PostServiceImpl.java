@@ -2,8 +2,7 @@ package com.ittalens.gag.services;
 
 import com.ittalens.gag.model.dto.PostCreateReqDto;
 import com.ittalens.gag.model.dto.PostRespDto;
-import com.ittalens.gag.model.entity.Post;
-import com.ittalens.gag.model.exceptions.NotFoundException;
+import com.ittalens.gag.model.entity.PostEntity;
 import com.ittalens.gag.model.repository.PostRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -32,39 +31,37 @@ public class PostServiceImpl implements PostService {
         MultipartFile originalFile = postDto.getFile();
 
         String internalFileName = fileStoreService.saveFile(originalFile);
-        Post post = new Post();
-        post.setTitle(postDto.getTitle());
-        post.setResourcePath(internalFileName);
-        post.setCreatedAt(LocalDateTime.now());
-        post.setCreatedBy(1);
-        post.setCategoryId(postDto.getCategoryId());
-        postRepository.save(post);
+        PostEntity postEntity = new PostEntity();
+        postEntity.setTitle(postDto.getTitle());
+        postEntity.setResourcePath(internalFileName);
+        postEntity.setCreatedAt(LocalDateTime.now());
+        postEntity.setCreatedBy(1);
+        postEntity.setCategoryId(postDto.getCategoryId());
+        postRepository.save(postEntity);
 
     }
 
     public List<PostRespDto> getAllByCreationDate() {
-        List<Post> posts = postRepository.findByOrderByCreatedAtAsc();
-        List<PostRespDto> postDtos = posts.stream()
-                .map(post -> modelMapper.map(post, PostRespDto.class))
+        List<PostEntity> postEntities = postRepository.findByOrderByCreatedAtAsc();
+        List<PostRespDto> postDtos = postEntities.stream()
+                .map(postEntity -> modelMapper.map(postEntity, PostRespDto.class))
                 .collect(Collectors.toList());
         return postDtos;
     }
 
     public List<PostRespDto> getAllPostsDto() {
-        List<Post> posts = postRepository.findAll();
-        List<PostRespDto> postDtos = posts.stream()
-                .map(post -> modelMapper.map(post, PostRespDto.class))
+        List<PostEntity> postEntities = postRepository.findAll();
+        List<PostRespDto> postDtos = postEntities.stream()
+                .map(postEntity -> modelMapper.map(postEntity, PostRespDto.class))
                 .collect(Collectors.toList());
         return postDtos;
     }
 
     public List<PostRespDto> findPostsByWord(String word) {
-        List<Post> posts = postRepository.getByTitle(word);
-        if (posts.isEmpty()) {
-            throw new NotFoundException("Not found post with this title");
-        }
-        List<PostRespDto> postDtos = posts.stream()
-                .map(post -> modelMapper.map(post, PostRespDto.class))
+        List<PostEntity> postEntities = postRepository.findByTitleContains(word);
+
+        List<PostRespDto> postDtos = postEntities.stream()
+                .map(postEntity -> modelMapper.map(postEntity, PostRespDto.class))
                 .collect(Collectors.toList());
         return postDtos;
     }
