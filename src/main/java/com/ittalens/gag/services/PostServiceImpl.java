@@ -42,7 +42,7 @@ public class PostServiceImpl implements PostService {
     }
 
     public List<PostRespDto> getAllByCreationDate() {
-        List<PostEntity> postEntities = postRepository.findByOrderByCreatedAtAsc();
+        List<PostEntity> postEntities = postRepository.findByOrderByCreatedAtDesc();
         List<PostRespDto> postDtos = postEntities.stream()
                 .map(postEntity -> modelMapper.map(postEntity, PostRespDto.class))
                 .collect(Collectors.toList());

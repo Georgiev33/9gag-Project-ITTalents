@@ -11,7 +11,7 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     List<PostEntity> findByTitleContains(String word);
 
-    List<PostEntity> findByOrderByCreatedAtAsc();
+    List<PostEntity> findByOrderByCreatedAtDesc();
 
 
 }
