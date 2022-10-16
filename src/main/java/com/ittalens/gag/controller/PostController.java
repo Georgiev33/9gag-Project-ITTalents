@@ -32,9 +32,10 @@ public class PostController {
         return postService.getAllByCreationDate();
     }
 
-    @GetMapping("/post/{word}")
-    public List<PostRespDto> getAllPostsByWord(@PathVariable String word) {
-        return postService.findPostsByWord(word);
+    @GetMapping("/post")
+    public ResponseEntity<?> getAllPostsByWord(@RequestParam String word) {
+        List<PostRespDto> posts = postService.findPostsByWord(word);
+        return ResponseEntity.ok(posts);
     }
 
 

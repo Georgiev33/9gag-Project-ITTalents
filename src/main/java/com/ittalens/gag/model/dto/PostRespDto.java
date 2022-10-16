@@ -11,8 +11,8 @@ public class PostRespDto {
 
     private long id;
     private String title;
-    private MultipartFile file;
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private String resourcePath;
+   // @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     private long createdBy;
     private long categoryId;
