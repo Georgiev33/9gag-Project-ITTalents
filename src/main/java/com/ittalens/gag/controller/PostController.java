@@ -1,60 +1,41 @@
 package com.ittalens.gag.controller;
 
-import com.ittalens.gag.model.dto.PostDto;
-import com.ittalens.gag.model.entity.Post;
-import com.ittalens.gag.model.repository.PostRepository;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import com.ittalens.gag.model.dto.PostCreateReqDto;
+import com.ittalens.gag.model.dto.PostRespDto;
+import com.ittalens.gag.services.PostServiceImpl;
+import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@RestController("/post")
+@RestController()
+@AllArgsConstructor
 public class PostController {
-    @Autowired
-    private PostRepository postRepository;
-    @Autowired
-    private ModelMapper modelMapper;
 
-    @PostMapping()
-    public PostDto addPost(@RequestBody Post post){
-        post.setCreatedAt(LocalDateTime.now());
-        postRepository.save(post);
-        System.out.println("insert in DB post");
-        PostDto postDto = modelMapper.map(post, PostDto.class);
-        return postDto;
+    private final PostServiceImpl postService;
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadFile(@ModelAttribute PostCreateReqDto dto) {
+        postService.createPost(dto);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/post/all")
-    public List<PostDto> getAllPosts(){
-        List<Post> posts = postRepository.findAll();
-        List<PostDto> postDtos = posts.stream()
-                .map(post -> modelMapper.map(post,PostDto.class))
-                .collect(Collectors.toList());
-        return postDtos;
+    public List<PostRespDto> getAllPosts() {
+        return postService.getAllPostsDto();
     }
 
     @GetMapping("/post/date")
-    public List<PostDto> getAllPostsByDateAndTime(){
-        List<Post> posts = postRepository.findAll();
-        List<PostDto> postDtos = posts.stream()
-                .map(post -> modelMapper.map(post,PostDto.class))
-                .sorted((post1, post2) -> post1.getCreatedAt().compareTo(post2.getCreatedAt()))
-                .collect(Collectors.toList());
-        return postDtos;
+    public List<PostRespDto> getAllPostsByDateAndTime() {
+        return postService.getAllByCreationDate();
     }
 
-    @GetMapping("/post/word")
-    public List<PostDto> getAllPostsByWord(@RequestBody String word){
-        List<Post> posts = postRepository.findAll();
-        List<PostDto> postDtos = posts.stream()
-                .map(post -> modelMapper.map(post,PostDto.class))
-                .collect(Collectors.toList());
-        return postDtos;
+    @GetMapping("/post/{word}")
+    public List<PostRespDto> getAllPostsByWord(@PathVariable String word) {
+        return postService.findPostsByWord(word);
     }
+
+
 }
