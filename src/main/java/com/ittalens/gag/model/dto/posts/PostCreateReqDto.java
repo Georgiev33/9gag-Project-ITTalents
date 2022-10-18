@@ -9,6 +9,4 @@ public class PostCreateReqDto {
     private String title;
     private MultipartFile file;
     private long categoryId;
-    private long tagId;
-
 }
