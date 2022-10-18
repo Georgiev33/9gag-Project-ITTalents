@@ -33,10 +33,12 @@ CREATE TABLE IF NOT EXISTS posts
     PRIMARY KEY (id),
     CONSTRAINT fk_posts_users_id
     FOREIGN KEY (created_by)
-    REFERENCES users (id),
+    REFERENCES users (id)
+    ON DELETE CASCADE,
     CONSTRAINT fk_posts_categories_id
     FOREIGN KEY (category_id)
     REFERENCES categories (id)
+    ON DELETE CASCADE
     );
 
 CREATE TABLE IF NOT EXISTS comments
@@ -51,13 +53,23 @@ CREATE TABLE IF NOT EXISTS comments
     PRIMARY KEY (id),
     CONSTRAINT fk_commends_users_id
     FOREIGN KEY (created_by)
-    REFERENCES users (id),
+    REFERENCES users (id)
+    ON DELETE CASCADE,
     CONSTRAINT fk_commends_posts_id
     FOREIGN KEY (post_id)
-    REFERENCES posts (id),
+    REFERENCES posts (id)
+    ON DELETE CASCADE,
     CONSTRAINT fk_commends_commends_id
     FOREIGN KEY (replied_comment_id)
     REFERENCES comments (id)
+    ON DELETE CASCADE
+    );
+
+CREATE TABLE IF NOT EXISTS tags
+(
+    id       INT          NOT NULL AUTO_INCREMENT,
+    tag_type VARCHAR(100) NOT NULL,
+    PRIMARY KEY (id)
     );
 
 CREATE TABLE IF NOT EXISTS users_comments_reactions
@@ -67,10 +79,12 @@ CREATE TABLE IF NOT EXISTS users_comments_reactions
     comment_id INT     NOT NULL,
     CONSTRAINT fk_users_comments_reactions_comments_id
     FOREIGN KEY (comment_id)
-    REFERENCES comments (id),
+    REFERENCES comments (id)
+    ON DELETE CASCADE,
     CONSTRAINT fk_users_comments_reactions_users_id
     FOREIGN KEY (user_id)
     REFERENCES users (id)
+    ON DELETE CASCADE
     );
 
 CREATE TABLE IF NOT EXISTS users_posts_reactions
@@ -80,19 +94,10 @@ CREATE TABLE IF NOT EXISTS users_posts_reactions
     post_id INT     NOT NULL,
     CONSTRAINT fk_users_posts_reactions_posts_id
     FOREIGN KEY (post_id)
-    REFERENCES posts (id),
+    REFERENCES posts (id)
+    ON DELETE CASCADE,
     CONSTRAINT fk_users_posts_reactions_users_id
     FOREIGN KEY (user_id)
     REFERENCES users (id)
-    );
-
-CREATE TABLE IF NOT EXISTS tags
-(
-    id       INT          NOT NULL AUTO_INCREMENT,
-    tag_type VARCHAR(100) NOT NULL,
-    post_id  INT          NOT NULL,
-    PRIMARY KEY (id),
-    CONSTRAINT fk_tags_posts_id
-    FOREIGN KEY (post_id)
-    REFERENCES posts (id)
+    ON DELETE CASCADE
     );

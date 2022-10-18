@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController()
+@RestController
 @AllArgsConstructor
 public class PostController {
 
@@ -37,5 +37,9 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
-
+    @DeleteMapping("/post")
+    public ResponseEntity<?> deletedPost(@RequestParam Long id) {
+        postService.deletedPostById(id);
+        return ResponseEntity.ok().build();
+    }
 }

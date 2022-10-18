@@ -23,6 +23,8 @@ public class PostEntity {
     private long createdBy;
     @Column(name = "category_id")
     private long categoryId;
+    @Column(name = "tag_id")
+    private long tagId;
 
 
 }
