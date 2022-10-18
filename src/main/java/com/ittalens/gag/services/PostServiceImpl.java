@@ -1,8 +1,9 @@
 package com.ittalens.gag.services;
 
-import com.ittalens.gag.model.dto.PostCreateReqDto;
-import com.ittalens.gag.model.dto.PostRespDto;
+import com.ittalens.gag.model.dto.posts.PostCreateReqDto;
+import com.ittalens.gag.model.dto.posts.PostRespDto;
 import com.ittalens.gag.model.entity.PostEntity;
+import com.ittalens.gag.model.exceptions.NotFoundException;
 import com.ittalens.gag.model.repository.PostRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -35,7 +36,7 @@ public class PostServiceImpl implements PostService {
         postEntity.setTitle(postDto.getTitle());
         postEntity.setResourcePath(internalFileName);
         postEntity.setCreatedAt(LocalDateTime.now());
-        postEntity.setCreatedBy(1);
+        postEntity.setCreatedBy(1);    // here we must take user ID vrom session
         postEntity.setCategoryId(postDto.getCategoryId());
         postRepository.save(postEntity);
 
@@ -64,5 +65,13 @@ public class PostServiceImpl implements PostService {
                 .map(postEntity -> modelMapper.map(postEntity, PostRespDto.class))
                 .collect(Collectors.toList());
         return postDtos;
+    }
+
+    public void deletedPostById(Long id) {
+        PostEntity post = postRepository.findById(id).orElse(null);
+        if (post == null) {
+            throw new NotFoundException("This post does not exist");
+        }
+        postRepository.delete(post);
     }
 }
