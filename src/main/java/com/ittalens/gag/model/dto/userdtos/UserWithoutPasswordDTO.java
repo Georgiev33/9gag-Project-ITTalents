@@ -1,4 +1,4 @@
-package com.ittalens.gag.model.dto;
+package com.ittalens.gag.model.dto.userdtos;
 
 import lombok.Data;
 
@@ -9,4 +9,5 @@ public class UserWithoutPasswordDTO {
     private String firstName;
     private String lastName;
     private String userName;
+    private int age;
 }

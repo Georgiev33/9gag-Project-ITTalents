@@ -1,6 +1,7 @@
 package com.ittalens.gag.model.exceptions;
 
 import com.ittalens.gag.model.dto.ErrorDTO;
+import net.bytebuddy.asm.Advice;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,6 +30,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorDTO errorDTO = new ErrorDTO();
         errorDTO.setMessage(ex.getMessage());
         errorDTO.setStatus(HttpStatus.NOT_FOUND.value());
+        errorDTO.setLocalDateTime(LocalDateTime.now());
+        return errorDTO;
+    }
+
+    @ExceptionHandler(value = {UnauthorizedException.class})
+    @ResponseStatus(code = HttpStatus.UNAUTHORIZED)
+    private ErrorDTO handleUnauthorized(Exception ex){
+        ErrorDTO errorDTO = new ErrorDTO();
+        errorDTO.setMessage(ex.getMessage());
+        errorDTO.setStatus(HttpStatus.UNAUTHORIZED.value());
         errorDTO.setLocalDateTime(LocalDateTime.now());
         return errorDTO;
     }

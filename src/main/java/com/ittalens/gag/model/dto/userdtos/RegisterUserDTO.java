@@ -1,4 +1,4 @@
-package com.ittalens.gag.model.dto;
+package com.ittalens.gag.model.dto.userdtos;
 
 import lombok.Data;
 
