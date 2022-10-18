@@ -4,6 +4,8 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -25,6 +27,10 @@ public class PostEntity {
     private long categoryId;
     @Column(name = "tag_id")
     private long tagId;
-
+    @ManyToMany
+    @JoinTable(name = "post_with_tags",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn (name = "tag_id"))
+    private List<TagEntity> tags = new ArrayList();
 
 }

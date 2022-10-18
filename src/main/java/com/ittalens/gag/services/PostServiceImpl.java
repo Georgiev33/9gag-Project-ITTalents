@@ -2,9 +2,12 @@ package com.ittalens.gag.services;
 
 import com.ittalens.gag.model.dto.posts.PostCreateReqDto;
 import com.ittalens.gag.model.dto.posts.PostRespDto;
+import com.ittalens.gag.model.dto.tags.TagSimpleDto;
 import com.ittalens.gag.model.entity.PostEntity;
+import com.ittalens.gag.model.entity.TagEntity;
 import com.ittalens.gag.model.exceptions.NotFoundException;
 import com.ittalens.gag.model.repository.PostRepository;
+import com.ittalens.gag.model.repository.TagRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,8 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private final PostRepository postRepository;
     @Autowired
+    private final TagRepository tagRepository;
+    @Autowired
     private final FileStoreService fileStoreService;
     @Autowired
     private final ModelMapper modelMapper;
@@ -38,6 +43,15 @@ public class PostServiceImpl implements PostService {
         postEntity.setCreatedAt(LocalDateTime.now());
         postEntity.setCreatedBy(1);    // here we must take user ID vrom session
         postEntity.setCategoryId(postDto.getCategoryId());
+        if (!postDto.getTags().isEmpty()) {
+
+            for (TagSimpleDto tagSimpleDto : postDto.getTags()) {
+                TagEntity tagEntity = tagRepository.findById(tagSimpleDto.getId())
+                        .orElseThrow(() -> new NotFoundException("Not find tag for this post"));
+                postEntity.getTags().add(tagEntity);
+            }
+        }
+
         postRepository.save(postEntity);
 
     }
