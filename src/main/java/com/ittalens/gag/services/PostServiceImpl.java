@@ -2,7 +2,7 @@ package com.ittalens.gag.services;
 
 import com.ittalens.gag.model.dto.posts.PostCreateReqDto;
 import com.ittalens.gag.model.dto.posts.PostRespDto;
-import com.ittalens.gag.model.dto.tags.TagSimpleDto;
+import com.ittalens.gag.model.dto.tags.TagCreatedDto;
 import com.ittalens.gag.model.entity.PostEntity;
 import com.ittalens.gag.model.entity.TagEntity;
 import com.ittalens.gag.model.exceptions.NotFoundException;
@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,8 @@ public class PostServiceImpl implements PostService {
     private final FileStoreService fileStoreService;
     @Autowired
     private final ModelMapper modelMapper;
+    @Autowired
+    private final TagService tagService;
 
     @Override
     public void createPost(PostCreateReqDto postDto) {
@@ -41,19 +45,29 @@ public class PostServiceImpl implements PostService {
         postEntity.setTitle(postDto.getTitle());
         postEntity.setResourcePath(internalFileName);
         postEntity.setCreatedAt(LocalDateTime.now());
-        postEntity.setCreatedBy(1);    // here we must take user ID vrom session
+        postEntity.setCreatedBy(3);    // here we must take user ID from session
         postEntity.setCategoryId(postDto.getCategoryId());
-        if (!postDto.getTags().isEmpty()) {
-
-            for (TagSimpleDto tagSimpleDto : postDto.getTags()) {
-                TagEntity tagEntity = tagRepository.findById(tagSimpleDto.getId())
-                        .orElseThrow(() -> new NotFoundException("Not find tag for this post"));
-                postEntity.getTags().add(tagEntity);
-            }
-        }
-
+        postEntity.setTags(setTagsFromPostDto(postDto.getTagTypes()));
         postRepository.save(postEntity);
 
+    }
+
+    private List<TagEntity> setTagsFromPostDto(List<String> tags) {
+        List<TagEntity> tagEntityList = new ArrayList<>();
+
+        for (String type : tags) {
+            TagEntity tagEntity = new TagEntity();
+            tagEntity = tagRepository.findByTagType(type);
+
+            if (tagEntity == null) {
+                TagCreatedDto tagCreatedDto = new TagCreatedDto();
+                tagCreatedDto.setTagType(type);
+                tagService.createdTag(tagCreatedDto);
+            }
+            tagEntityList.add(tagEntity);
+        }
+
+        return tagEntityList;
     }
 
     public List<PostRespDto> getAllByCreationDate() {
