@@ -1,8 +1,6 @@
-package com.ittalens.gag.model.dto;
+package com.ittalens.gag.model.dto.posts;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 

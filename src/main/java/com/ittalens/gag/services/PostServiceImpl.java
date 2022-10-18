@@ -1,7 +1,7 @@
 package com.ittalens.gag.services;
 
-import com.ittalens.gag.model.dto.PostCreateReqDto;
-import com.ittalens.gag.model.dto.PostRespDto;
+import com.ittalens.gag.model.dto.posts.PostCreateReqDto;
+import com.ittalens.gag.model.dto.posts.PostRespDto;
 import com.ittalens.gag.model.entity.PostEntity;
 import com.ittalens.gag.model.repository.PostRepository;
 import lombok.AllArgsConstructor;
