@@ -34,6 +34,9 @@ public class PostServiceImpl implements PostService {
     private final ModelMapper modelMapper;
     @Autowired
     private final TagService tagService;
+    @Autowired
+    private final UserSessionServiceImpl userSessionService;
+
 
     @Override
     public void createPost(PostCreateReqDto postDto) {
@@ -45,9 +48,9 @@ public class PostServiceImpl implements PostService {
         postEntity.setTitle(postDto.getTitle());
         postEntity.setResourcePath(internalFileName);
         postEntity.setCreatedAt(LocalDateTime.now());
-        postEntity.setCreatedBy(3);    // here we must take user ID from session
+        postEntity.setCreatedBy(postDto.getUserId());
         postEntity.setCategoryId(postDto.getCategoryId());
-        postEntity.setTags(setTagsFromPostDto(postDto.getTagTypes()));
+        postEntity.getTags().addAll(setTagsFromPostDto(postDto.getTagTypes()));
         postRepository.save(postEntity);
 
     }

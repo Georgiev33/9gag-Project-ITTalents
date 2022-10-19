@@ -2,61 +2,55 @@ package com.ittalens.gag.controller;
 
 import com.ittalens.gag.model.dto.posts.PostCreateReqDto;
 import com.ittalens.gag.model.dto.posts.PostRespDto;
-import com.ittalens.gag.model.exceptions.UnauthorizedException;
 import com.ittalens.gag.services.PostServiceImpl;
+import com.ittalens.gag.services.UserSessionServiceImpl;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @RestController
 @AllArgsConstructor
 public class PostController {
 
+    @Autowired
     private final PostServiceImpl postService;
+    @Autowired
+    private final UserSessionServiceImpl userSessionService;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadFile(@ModelAttribute PostCreateReqDto dto, HttpSession session) {
-        if (session.getAttribute("LOGGED") != null) {
-            postService.createPost(dto);
-            return ResponseEntity.ok().build();
-        }
-        throw new UnauthorizedException("Must to be logged");
+    public ResponseEntity<?> uploadFile(@ModelAttribute PostCreateReqDto dto) {
+        userSessionService.isLogged();
+        dto.setUserId(userSessionService.currentUserId());
+        postService.createPost(dto);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/post/all")
-    public List<PostRespDto> getAllPosts(HttpSession session) {
-        if (session.getAttribute("LOGGED") != null) {
-            return postService.getAllPostsDto();
-        }
-        throw new UnauthorizedException("Must to be logged");
+    public List<PostRespDto> getAllPosts() {
+        userSessionService.isLogged();
+        return postService.getAllPostsDto();
     }
 
     @GetMapping("/post/date")
-    public List<PostRespDto> getAllPostsByDateAndTime(HttpSession session) {
-        if (session.getAttribute("LOGGED") != null) {
-            return postService.getAllByCreationDate();
-        }
-        throw new UnauthorizedException("Must to be logged");
+    public List<PostRespDto> getAllPostsByDateAndTime() {
+        userSessionService.isLogged();
+        return postService.getAllByCreationDate();
     }
 
     @GetMapping("/post")
-    public ResponseEntity<?> getAllPostsByWord(@RequestParam String word, HttpSession session) {
-        if (session.getAttribute("LOGGED") != null) {
-            List<PostRespDto> posts = postService.findPostsByWord(word);
-            return ResponseEntity.ok(posts);
-        }
-        throw new UnauthorizedException("Must to be logged");
+    public ResponseEntity<?> getAllPostsByWord(@RequestParam String word) {
+        userSessionService.isLogged();
+        List<PostRespDto> posts = postService.findPostsByWord(word);
+        return ResponseEntity.ok(posts);
     }
 
     @DeleteMapping("/post")
-    public ResponseEntity<?> deletedPost(@RequestParam Long id, HttpSession session) {
-        if (session.getAttribute("LOGGED") != null) {
-            postService.deletedPostById(id);
-            return ResponseEntity.ok().build();
-        }
-        throw new UnauthorizedException("Must to be logged");
+    public ResponseEntity<?> deletedPost(@RequestParam Long id) {
+        userSessionService.isLogged();
+        postService.deletedPostById(id);
+        return ResponseEntity.ok().build();
     }
 }

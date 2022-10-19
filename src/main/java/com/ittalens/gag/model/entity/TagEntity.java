@@ -16,9 +16,6 @@ public class TagEntity {
     private Long id;
     @Column(name = "tag_type")
     private String tagType;
-    @ManyToMany
-    @JoinTable(name = "post_with_tags",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    @ManyToMany(mappedBy = "tags")
     private List<PostEntity> posts = new ArrayList();
 }
