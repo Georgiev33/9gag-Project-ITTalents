@@ -11,7 +11,8 @@ public class PostCreateReqDto {
 
     private String title;
     private MultipartFile file;
-    private long categoryId;
+    private Long categoryId;
     private List<String> tagTypes = new ArrayList<>();
+    private Long userId;
 
 }

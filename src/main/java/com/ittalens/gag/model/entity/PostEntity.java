@@ -14,7 +14,7 @@ public class PostEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     @Column(name = "title")
     private String title;
     @Column(name = "resource_path")
@@ -22,9 +22,9 @@ public class PostEntity {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     @Column(name = "created_by")
-    private long createdBy;
+    private Long createdBy;
     @Column(name = "category_id")
-    private long categoryId;
+    private Long categoryId;
     @ManyToMany
     @JoinTable(name = "post_with_tags",
             joinColumns = @JoinColumn(name = "post_id"),
