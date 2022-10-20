@@ -34,19 +34,13 @@ public class UserController {
     }
     @PutMapping()
     public ResponseEntity<UserWithoutPasswordDTO> edit(@RequestBody EditUserDTO userDTO, HttpSession s){
-        if(s.getAttribute("LOGGED") != null) {
             UserWithoutPasswordDTO result = userService.edit((Integer) s.getAttribute("USER_ID"), userDTO);
             return ResponseEntity.ok(result);
-        }
-        throw new UnauthorizedException("Not logged in.");
     }
     @PutMapping("/pass")
     public ResponseEntity<UserWithoutPasswordDTO> editPass(@RequestBody ChangePasswordDTO userDTO, HttpSession s){
-        if(s.getAttribute("LOGGED") != null){
             UserWithoutPasswordDTO result = userService.editPass(userDTO, (Integer) s.getAttribute("USER_ID"));
             return ResponseEntity.ok(result);
-        }
-        throw new UnauthorizedException("Not logged in.");
     }
     @GetMapping("/{id}")
     public ResponseEntity<UserWithoutPasswordDTO> getById(@PathVariable long id){
