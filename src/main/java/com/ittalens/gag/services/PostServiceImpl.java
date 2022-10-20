@@ -1,13 +1,18 @@
 package com.ittalens.gag.services;
 
 import com.ittalens.gag.model.dto.posts.PostCreateReqDTO;
+import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
 import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import com.ittalens.gag.model.dto.tags.TagCreatedDTO;
 import com.ittalens.gag.model.entity.PostEntity;
 import com.ittalens.gag.model.entity.TagEntity;
+import com.ittalens.gag.model.entity.User;
+import com.ittalens.gag.model.entity.UserPostReaction;
 import com.ittalens.gag.model.exceptions.NotFoundException;
+import com.ittalens.gag.model.repository.PostReactionsRepository;
 import com.ittalens.gag.model.repository.PostRepository;
 import com.ittalens.gag.model.repository.TagRepository;
+import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +40,10 @@ public class PostServiceImpl implements PostService {
     private final TagService tagService;
     @Autowired
     private final UserSessionServiceImpl userSessionService;
+    @Autowired
+    private final UserRepository userRepository;
+    @Autowired
+    PostReactionsRepository reactionsRepository;
 
 
     @Override
@@ -104,4 +113,23 @@ public class PostServiceImpl implements PostService {
         }
         postRepository.delete(post);
     }
+    public PostReactionResponseDTO react(long pid, boolean status){
+        Long userId = userSessionService.currentUserId();
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("No such user."));
+        PostEntity post = postRepository.findById(pid).orElseThrow(() -> new NotFoundException("No such post."));
+        UserPostReaction.PostReactionKey key = new UserPostReaction.PostReactionKey();
+        key.setPostId(pid);
+        key.setUserId(userId);
+        UserPostReaction reaction = new UserPostReaction();
+        reaction.setPost(post);
+        reaction.setUser(user);
+        reaction.setStatus(status);
+        reaction.setId(key);
+        reactionsRepository.save(reaction);
+        PostReactionResponseDTO responseDTO = new PostReactionResponseDTO();
+        responseDTO.setPostId(pid);
+        responseDTO.setCurrentReactionStatus(status);
+        return responseDTO;
+    }
+
 }

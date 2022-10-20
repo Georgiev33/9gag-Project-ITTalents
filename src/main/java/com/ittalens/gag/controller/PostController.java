@@ -1,6 +1,8 @@
 package com.ittalens.gag.controller;
 
 import com.ittalens.gag.model.dto.posts.PostCreateReqDTO;
+import com.ittalens.gag.model.dto.posts.PostReactionDTO;
+import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
 import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import com.ittalens.gag.services.PostServiceImpl;
 import lombok.AllArgsConstructor;
@@ -43,4 +45,10 @@ public class PostController {
         postService.deletedPostById(id);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("{pid}/react")
+    private ResponseEntity<PostReactionResponseDTO> react(@PathVariable long pid, @RequestBody PostReactionDTO reactionDTO){
+        return ResponseEntity.ok(postService.react(pid, reactionDTO.isStatus()));
+    }
+
 }

@@ -4,6 +4,10 @@ import lombok.Data;
 import javax.annotation.processing.Generated;
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -28,5 +32,9 @@ public class User {
     private LocalDateTime registerDate;
     @Column
     private boolean isActive;
+    @OneToMany(mappedBy = "post")
+    private Set<UserPostReaction> reactedPosts;
+
+
 }
 
