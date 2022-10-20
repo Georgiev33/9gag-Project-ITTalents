@@ -48,9 +48,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void createPost(PostCreateReqDTO postDto) {
-
         MultipartFile originalFile = postDto.getFile();
-
         String internalFileName = fileStoreService.saveFile(originalFile);
         PostEntity postEntity = new PostEntity();
         postEntity.setTitle(postDto.getTitle());
@@ -120,14 +118,17 @@ public class PostServiceImpl implements PostService {
         UserPostReaction.PostReactionKey key = new UserPostReaction.PostReactionKey();
         key.setPostId(pid);
         key.setUserId(userId);
+
         UserPostReaction reaction = new UserPostReaction();
         reaction.setPost(post);
         reaction.setUser(user);
         reaction.setStatus(status);
         reaction.setId(key);
         reactionsRepository.save(reaction);
+
         PostReactionResponseDTO responseDTO = new PostReactionResponseDTO();
-        responseDTO.setPostId(pid);
+        responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
+        responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
         responseDTO.setCurrentReactionStatus(status);
         return responseDTO;
     }

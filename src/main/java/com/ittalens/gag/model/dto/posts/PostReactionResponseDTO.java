@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class PostReactionResponseDTO {
-    private long postId;
+    private int likes;
+    private int dislikes;
     private boolean currentReactionStatus;
 }
