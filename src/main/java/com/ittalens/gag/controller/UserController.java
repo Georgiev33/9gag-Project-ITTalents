@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.List;
 
@@ -23,19 +24,13 @@ public class UserController {
     @PostMapping("/register")
     @ResponseStatus(code = HttpStatus.CREATED)
     public ResponseEntity<RegisterUserDTO> registerUser(@RequestBody RegisterUserDTO userDTO){
-
             userService.registerUser(userDTO);
             return ResponseEntity.ok().build();
     }
     @PostMapping("/auth")
     public ResponseEntity<UserWithoutPasswordDTO> login(@RequestBody UserLoginDTO userDTO, HttpSession s){
         UserWithoutPasswordDTO result = userService.login(userDTO);
-        if(result != null){
-            s.setAttribute("LOGGED", true);
-            s.setAttribute("USER_ID", result.getId());
-            return ResponseEntity.ok(result);
-        }
-        throw new BadRequestException("Invalid credentials.");
+        return ResponseEntity.ok(result);
     }
     @PutMapping()
     public ResponseEntity<UserWithoutPasswordDTO> edit(@RequestBody EditUserDTO userDTO, HttpSession s){

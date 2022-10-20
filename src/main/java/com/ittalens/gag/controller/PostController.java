@@ -1,11 +1,9 @@
 package com.ittalens.gag.controller;
 
-import com.ittalens.gag.model.dto.posts.PostCreateReqDto;
-import com.ittalens.gag.model.dto.posts.PostRespDto;
+import com.ittalens.gag.model.dto.posts.PostCreateReqDTO;
+import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import com.ittalens.gag.services.PostServiceImpl;
-import com.ittalens.gag.services.UserSessionServiceImpl;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,43 +11,35 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("/posts")
 public class PostController {
 
-    @Autowired
     private final PostServiceImpl postService;
-    @Autowired
-    private final UserSessionServiceImpl userSessionService;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadFile(@ModelAttribute PostCreateReqDto dto) {
-        userSessionService.isLogged();
-        dto.setUserId(userSessionService.currentUserId());
+    private ResponseEntity<?> uploadFile(@ModelAttribute PostCreateReqDTO dto) {
         postService.createPost(dto);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/post/all")
-    public List<PostRespDto> getAllPosts() {
-        userSessionService.isLogged();
+    @GetMapping("/all")
+    private List<PostRespDTO> getAllPosts() {
         return postService.getAllPostsDto();
     }
 
-    @GetMapping("/post/date")
-    public List<PostRespDto> getAllPostsByDateAndTime() {
-        userSessionService.isLogged();
+    @GetMapping("/date")
+    private List<PostRespDTO> getAllPostsByDateAndTime() {
         return postService.getAllByCreationDate();
     }
 
-    @GetMapping("/post")
-    public ResponseEntity<?> getAllPostsByWord(@RequestParam String word) {
-        userSessionService.isLogged();
-        List<PostRespDto> posts = postService.findPostsByWord(word);
+    @GetMapping()
+    private ResponseEntity<?> getAllPostsByWord(@RequestParam String word) {
+        List<PostRespDTO> posts = postService.findPostsByWord(word);
         return ResponseEntity.ok(posts);
     }
 
-    @DeleteMapping("/post")
-    public ResponseEntity<?> deletedPost(@RequestParam Long id) {
-        userSessionService.isLogged();
+    @DeleteMapping()
+    private ResponseEntity<?> deletedPost(@RequestParam Long id) {
         postService.deletedPostById(id);
         return ResponseEntity.ok().build();
     }

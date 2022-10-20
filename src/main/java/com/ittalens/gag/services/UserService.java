@@ -4,12 +4,12 @@ import com.ittalens.gag.model.dto.userdtos.*;
 import com.ittalens.gag.model.entity.User;
 import com.ittalens.gag.model.exceptions.BadRequestException;
 import com.ittalens.gag.model.exceptions.NotFoundException;
+import com.ittalens.gag.model.exceptions.UnauthorizedException;
 import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,17 +26,19 @@ public class UserService {
     private ModelMapper mapper;
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
-    public void registerUser(RegisterUserDTO u){
-        if(!validateEmail(u.getEmail())){
+    private final UserSessionServiceImpl userSessionService;
+
+    public void registerUser(RegisterUserDTO u) {
+        if (!validateEmail(u.getEmail())) {
             throw new BadRequestException("email already exists.");
         }
-        if(u.getAge() < 16 || u.getAge() > 110){
+        if (u.getAge() < 16 || u.getAge() > 110) {
             throw new BadRequestException("Invalid age.");
         }
-        if(!u.getPassword().equals(u.getRepeatedPassword())){
+        if (!u.getPassword().equals(u.getRepeatedPassword())) {
             throw new BadRequestException("Passwords don't match!");
         }
-        if(repository.findUsersByUserName(u.getUserName()).size() > 0){
+        if (repository.findUsersByUserName(u.getUserName()).size() > 0) {
             throw new BadRequestException("Username already exists");
         }
         u.setRegisterDate(LocalDateTime.now());
@@ -45,18 +47,19 @@ public class UserService {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         repository.save(user);
     }
+
     public UserWithoutPasswordDTO getUserById(long id) {
         Optional<User> optionalUser = repository.findById(id);
-        if(optionalUser.isPresent()){
+        if (optionalUser.isPresent()) {
             return mapper.map(optionalUser.get(), UserWithoutPasswordDTO.class);
         }
         throw new NotFoundException("User doesn't exist.");
     }
 
     public void delete(long id) {
-        if(repository.findById(id).isPresent()) {
+        if (repository.findById(id).isPresent()) {
             User u = repository.findById(id).get();
-            if(!u.isActive()){
+            if (!u.isActive()) {
                 throw new BadRequestException("User is already deleted.");
             }
             u.setActive(false);
@@ -68,28 +71,28 @@ public class UserService {
 
     public UserWithoutPasswordDTO edit(long userId, EditUserDTO editUserDTO) {
         Optional<User> user = repository.findById(userId);
-        if(user.isPresent()){
+        if (user.isPresent()) {
             User u = user.get();
-            if(editUserDTO.getUserName() != null && !editUserDTO.getUserName().equals(u.getUserName())){
-                if(!isUserNameFree(editUserDTO.getUserName())){
+            if (editUserDTO.getUserName() != null && !editUserDTO.getUserName().equals(u.getUserName())) {
+                if (!isUserNameFree(editUserDTO.getUserName())) {
                     throw new BadRequestException("Unique usernames only!");
                 }
                 u.setUserName(editUserDTO.getUserName());
             }
-            if(editUserDTO.getFirstName() != null && !editUserDTO.getFirstName().equals(u.getFirstName())){
+            if (editUserDTO.getFirstName() != null && !editUserDTO.getFirstName().equals(u.getFirstName())) {
                 u.setFirstName(editUserDTO.getFirstName());
             }
-            if(editUserDTO.getLastName() != null && !editUserDTO.getLastName().equals(u.getLastName())){
+            if (editUserDTO.getLastName() != null && !editUserDTO.getLastName().equals(u.getLastName())) {
                 u.setLastName(editUserDTO.getLastName());
             }
-            if(editUserDTO.getAge() != u.getAge() && editUserDTO.getAge() != 0) {
+            if (editUserDTO.getAge() != u.getAge() && editUserDTO.getAge() != 0) {
                 if (editUserDTO.getAge() < u.getAge() || editUserDTO.getAge() > 110) {
                     throw new BadRequestException("Invalid age edit.");
                 }
                 u.setAge(editUserDTO.getAge());
             }
-            if(editUserDTO.getEmail() != null && !editUserDTO.getEmail().equals(u.getEmail())){
-                if(!validateEmail(editUserDTO.getEmail())){
+            if (editUserDTO.getEmail() != null && !editUserDTO.getEmail().equals(u.getEmail())) {
+                if (!validateEmail(editUserDTO.getEmail())) {
                     throw new BadRequestException("Invalid email edit.");
                 }
                 u.setEmail(editUserDTO.getEmail());
@@ -102,12 +105,12 @@ public class UserService {
 
     public UserWithoutPasswordDTO editPass(ChangePasswordDTO userDTO, long id) {
         Optional<User> optionalUser = repository.findById(id);
-        if(optionalUser.isPresent()) {
+        if (optionalUser.isPresent()) {
             User u = optionalUser.get();
-            if (!bCryptPasswordEncoder.matches(userDTO.getCurrentPassword(),u.getPassword())){
+            if (!bCryptPasswordEncoder.matches(userDTO.getCurrentPassword(), u.getPassword())) {
                 throw new BadRequestException("Invalid credentials.");
             }
-            if(!userDTO.getNewPassword().equals(userDTO.getConfirmNewPassword())){
+            if (!userDTO.getNewPassword().equals(userDTO.getConfirmNewPassword())) {
                 throw new BadRequestException("Invalid credentials.");
             }
             u.setPassword(bCryptPasswordEncoder.encode(userDTO.getNewPassword()));
@@ -118,53 +121,46 @@ public class UserService {
     }
 
     public UserWithoutPasswordDTO login(UserLoginDTO userDTO) {
-        if(!validateUsername(userDTO.getUsername())){
-            throw new BadRequestException("Invalid credentials.");
+        Optional<User> existingUserOptional = repository.findUserByUserName(userDTO.getUsername());
+
+        if (existingUserOptional.isEmpty()) {
+            throw new BadRequestException("User or password do not mach");
         }
-        Optional<User> user = repository.findUserByUserName(userDTO.getUsername());
-        if(user.isPresent()){
-            if(validateLoginPassword(userDTO.getPassword(), user.get().getId())){
-                return mapper.map(user.get(), UserWithoutPasswordDTO.class);
-            }
-            throw new BadRequestException("Invalid credentials.");
+
+        User userForModel = existingUserOptional.get();
+
+        if (!bCryptPasswordEncoder.matches(userDTO.getPassword(), userForModel.getPassword())) {
+            throw new BadRequestException("User or password do not mach");
         }
-        throw new BadRequestException("Invalid credentials.");
+
+        if (!userForModel.isActive()){
+            throw new UnauthorizedException("This user does  not exist");
+        }
+
+        userSessionService.addCurrentUserToSession(new CurrentUserModel(userForModel.getId(), userForModel.getUserName()));
+        return mapper.map(existingUserOptional.get(), UserWithoutPasswordDTO.class);
     }
+
     public List<UserWithoutPasswordDTO> getAllUsers() {
         List<UserWithoutPasswordDTO> users =
                 repository.
-                findAll().
-                stream().map(user -> mapper.map(user, UserWithoutPasswordDTO.class)).collect(Collectors.toList());
+                        findAll().
+                        stream().map(user -> mapper.map(user, UserWithoutPasswordDTO.class)).collect(Collectors.toList());
         return users;
     }
 
-    private boolean validateEmail(String email){
-        if(!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")){
+    private boolean validateEmail(String email) {
+        if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
             throw new BadRequestException("Invalid email.");
         }
-        if(repository.findUsersByEmail(email).size() > 0){
+        if (repository.findUsersByEmail(email).size() > 0) {
             throw new BadRequestException("Email already exists.");
         }
         return true;
     }
 
-    private boolean validateUsername(String username){
-        if(username.length() < 3){
-            return false;
-        }
-        if(!repository.findUserByUserName(username).isPresent()){
-            return false;
-        }
-        return true;
-    }
-
-    private boolean validateLoginPassword(String password, long id){
-        Optional<User> user = repository.findById(id);
-        return user.isPresent() && bCryptPasswordEncoder.matches(password, user.get().getPassword());
-    }
-
-    private boolean isUserNameFree(String username){
-        if(!repository.findUserByUserName(username).isPresent()){
+    private boolean isUserNameFree(String username) {
+        if (!repository.findUserByUserName(username).isPresent()) {
             return true;
         }
         return false;

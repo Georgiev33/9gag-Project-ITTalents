@@ -1,6 +1,6 @@
 package com.ittalens.gag.controller;
 
-import com.ittalens.gag.model.dto.tags.TagCreatedDto;
+import com.ittalens.gag.model.dto.tags.TagCreatedDTO;
 import com.ittalens.gag.services.TagServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ public class TagController {
     public final TagServiceImpl tagService;
 
     @PostMapping("/tag")
-    public ResponseEntity<?> createdTag(@RequestBody TagCreatedDto tagCreatedDto){
+    public ResponseEntity<?> createdTag(@RequestBody TagCreatedDTO tagCreatedDto){
         tagService.createdTag(tagCreatedDto);
         return ResponseEntity.ok().build();
     }

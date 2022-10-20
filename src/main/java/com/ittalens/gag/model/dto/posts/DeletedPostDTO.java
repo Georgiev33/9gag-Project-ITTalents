@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class DeletedPostDto {
+public class DeletedPostDTO {
 
     private Long id;
 }

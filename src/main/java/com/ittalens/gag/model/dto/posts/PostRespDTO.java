@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class PostRespDto {
+public class PostRespDTO {
 
     private Long id;
     private String title;
