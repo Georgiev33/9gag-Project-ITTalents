@@ -2,7 +2,9 @@ package com.ittalens.gag.services;
 
 public interface UserSessionService {
 
-    void isLogged();
+    boolean isLogged();
 
     Long currentUserId();
+
+    CurrentUserModel addCurrentUserToSession(CurrentUserModel currentUserModel);
 }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class PostCreateReqDto {
+public class PostCreateReqDTO {
 
     private String title;
     private MultipartFile file;

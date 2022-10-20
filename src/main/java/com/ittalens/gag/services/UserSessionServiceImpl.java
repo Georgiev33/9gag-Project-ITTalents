@@ -2,7 +2,6 @@ package com.ittalens.gag.services;
 
 import com.ittalens.gag.model.exceptions.UnauthorizedException;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
@@ -11,23 +10,30 @@ import javax.servlet.http.HttpSession;
 @AllArgsConstructor
 public class UserSessionServiceImpl implements UserSessionService {
 
-    @Autowired
+    public static final String CURRENT_USER = "CURRENT_USER";
     private final HttpSession httpSession;
-    public static final String USER_ID = "USER_ID";
-    public static final String LOGGED = "LOGGED";
 
     @Override
-    public void isLogged() {
-        if (httpSession.getAttribute(LOGGED) != null) {
-            return;
+    public boolean isLogged() {
+        if (httpSession.getAttribute(CURRENT_USER) != null){
+            return true;
         }
-        throw new UnauthorizedException("Must to be logged");
+        throw new UnauthorizedException("User is not logged");
     }
 
     @Override
     public Long currentUserId(){
-        Long userId = Long.parseLong(httpSession.getAttribute(USER_ID).toString());
-        return userId;
+        CurrentUserModel user = (CurrentUserModel) httpSession.getAttribute(CURRENT_USER);
+        return Long.parseLong(user.getId().toString());
+    }
+
+    @Override
+    public CurrentUserModel addCurrentUserToSession(CurrentUserModel currentUserModel) {
+        httpSession.setAttribute(CURRENT_USER, currentUserModel);
+        if(httpSession.getAttribute(CURRENT_USER) != null){
+            return currentUserModel;
+        }
+        return null;
     }
 
 }

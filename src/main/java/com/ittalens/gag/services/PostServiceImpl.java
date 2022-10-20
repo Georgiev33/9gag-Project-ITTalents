@@ -1,8 +1,8 @@
 package com.ittalens.gag.services;
 
-import com.ittalens.gag.model.dto.posts.PostCreateReqDto;
-import com.ittalens.gag.model.dto.posts.PostRespDto;
-import com.ittalens.gag.model.dto.tags.TagCreatedDto;
+import com.ittalens.gag.model.dto.posts.PostCreateReqDTO;
+import com.ittalens.gag.model.dto.posts.PostRespDTO;
+import com.ittalens.gag.model.dto.tags.TagCreatedDTO;
 import com.ittalens.gag.model.entity.PostEntity;
 import com.ittalens.gag.model.entity.TagEntity;
 import com.ittalens.gag.model.exceptions.NotFoundException;
@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +38,7 @@ public class PostServiceImpl implements PostService {
 
 
     @Override
-    public void createPost(PostCreateReqDto postDto) {
+    public void createPost(PostCreateReqDTO postDto) {
 
         MultipartFile originalFile = postDto.getFile();
 
@@ -48,7 +47,7 @@ public class PostServiceImpl implements PostService {
         postEntity.setTitle(postDto.getTitle());
         postEntity.setResourcePath(internalFileName);
         postEntity.setCreatedAt(LocalDateTime.now());
-        postEntity.setCreatedBy(postDto.getUserId());
+        postEntity.setCreatedBy(userSessionService.currentUserId());
         postEntity.setCategoryId(postDto.getCategoryId());
         postEntity.getTags().addAll(setTagsFromPostDto(postDto.getTagTypes()));
         postRepository.save(postEntity);
@@ -63,7 +62,7 @@ public class PostServiceImpl implements PostService {
             tagEntity = tagRepository.findByTagType(type);
 
             if (tagEntity == null) {
-                TagCreatedDto tagCreatedDto = new TagCreatedDto();
+                TagCreatedDTO tagCreatedDto = new TagCreatedDTO();
                 tagCreatedDto.setTagType(type);
                 tagService.createdTag(tagCreatedDto);
             }
@@ -73,27 +72,27 @@ public class PostServiceImpl implements PostService {
         return tagEntityList;
     }
 
-    public List<PostRespDto> getAllByCreationDate() {
+    public List<PostRespDTO> getAllByCreationDate() {
         List<PostEntity> postEntities = postRepository.findByOrderByCreatedAtDesc();
-        List<PostRespDto> postDtos = postEntities.stream()
-                .map(postEntity -> modelMapper.map(postEntity, PostRespDto.class))
+        List<PostRespDTO> postDtos = postEntities.stream()
+                .map(postEntity -> modelMapper.map(postEntity, PostRespDTO.class))
                 .collect(Collectors.toList());
         return postDtos;
     }
 
-    public List<PostRespDto> getAllPostsDto() {
+    public List<PostRespDTO> getAllPostsDto() {
         List<PostEntity> postEntities = postRepository.findAll();
-        List<PostRespDto> postDtos = postEntities.stream()
-                .map(postEntity -> modelMapper.map(postEntity, PostRespDto.class))
+        List<PostRespDTO> postDtos = postEntities.stream()
+                .map(postEntity -> modelMapper.map(postEntity, PostRespDTO.class))
                 .collect(Collectors.toList());
         return postDtos;
     }
 
-    public List<PostRespDto> findPostsByWord(String word) {
+    public List<PostRespDTO> findPostsByWord(String word) {
         List<PostEntity> postEntities = postRepository.findByTitleContains(word);
 
-        List<PostRespDto> postDtos = postEntities.stream()
-                .map(postEntity -> modelMapper.map(postEntity, PostRespDto.class))
+        List<PostRespDTO> postDtos = postEntities.stream()
+                .map(postEntity -> modelMapper.map(postEntity, PostRespDTO.class))
                 .collect(Collectors.toList());
         return postDtos;
     }
