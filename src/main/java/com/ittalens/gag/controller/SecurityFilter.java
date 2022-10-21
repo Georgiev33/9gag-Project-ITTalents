@@ -1,12 +1,12 @@
 package com.ittalens.gag.controller;
 
-import com.ittalens.gag.services.UserSessionServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component
@@ -14,11 +14,10 @@ import java.io.IOException;
 @Slf4j
 public class SecurityFilter implements Filter {
 
-    private final UserSessionServiceImpl userSessionService;
-
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
         String requestURI = request.getRequestURI();
 
         if (requestURI.contains("/users/auth")) {
@@ -26,12 +25,16 @@ public class SecurityFilter implements Filter {
             return;
         }
 
-        if (requestURI.contains("/users/register")){
+        if (requestURI.contains("/users/register")) {
             chain.doFilter(servletRequest, servletResponse);
             return;
         }
 
-        userSessionService.isLogged();
-        chain.doFilter(servletRequest, servletResponse);
+        if (request.getSession().getAttribute("LOGGED") == null){
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        chain.doFilter(servletRequest,servletResponse);
     }
 }

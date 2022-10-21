@@ -26,7 +26,6 @@ public class UserService {
     private ModelMapper mapper;
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final UserSessionServiceImpl userSessionService;
 
     public void registerUser(RegisterUserDTO u) {
         if (!validateEmail(u.getEmail())) {
@@ -123,11 +122,11 @@ public class UserService {
     public UserWithoutPasswordDTO login(UserLoginDTO userDTO) {
         User user = repository.findUserByUserName(userDTO.getUsername()).orElseThrow(() -> new NotFoundException("User or password doesn't match."));
         if (!bCryptPasswordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
-            throw new BadRequestException("User or password do not mach");
+            throw new BadRequestException("User or password doesn't match.");
         }
 
         if (!user.isActive()){
-            throw new UnauthorizedException("User or password do not mach");
+            throw new UnauthorizedException("User or password doesn't match.");
         }
         return mapper.map(user, UserWithoutPasswordDTO.class);
     }
