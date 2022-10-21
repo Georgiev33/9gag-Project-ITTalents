@@ -30,6 +30,10 @@ public class UserController {
     @PostMapping("/auth")
     public ResponseEntity<UserWithoutPasswordDTO> login(@RequestBody UserLoginDTO userDTO, HttpSession s){
         UserWithoutPasswordDTO result = userService.login(userDTO);
+        if(result!= null) {
+            s.setAttribute("LOGGED", true);
+            s.setAttribute("USER_ID", result.getId());
+        }
         return ResponseEntity.ok(result);
     }
     @PutMapping()

@@ -121,24 +121,15 @@ public class UserService {
     }
 
     public UserWithoutPasswordDTO login(UserLoginDTO userDTO) {
-        Optional<User> existingUserOptional = repository.findUserByUserName(userDTO.getUsername());
-
-        if (existingUserOptional.isEmpty()) {
+        User user = repository.findUserByUserName(userDTO.getUsername()).orElseThrow(() -> new NotFoundException("User or password doesn't match."));
+        if (!bCryptPasswordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
             throw new BadRequestException("User or password do not mach");
         }
 
-        User userForModel = existingUserOptional.get();
-
-        if (!bCryptPasswordEncoder.matches(userDTO.getPassword(), userForModel.getPassword())) {
-            throw new BadRequestException("User or password do not mach");
+        if (!user.isActive()){
+            throw new UnauthorizedException("User or password do not mach");
         }
-
-        if (!userForModel.isActive()){
-            throw new UnauthorizedException("This user does  not exist");
-        }
-
-        userSessionService.addCurrentUserToSession(new CurrentUserModel(userForModel.getId(), userForModel.getUserName()));
-        return mapper.map(existingUserOptional.get(), UserWithoutPasswordDTO.class);
+        return mapper.map(user, UserWithoutPasswordDTO.class);
     }
 
     public List<UserWithoutPasswordDTO> getAllUsers() {
