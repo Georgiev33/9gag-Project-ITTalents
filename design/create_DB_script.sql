@@ -72,6 +72,19 @@ CREATE TABLE IF NOT EXISTS tags
     PRIMARY KEY (id)
     );
 
+CREATE TABLE IF NOT EXISTS posts_with_tags (
+    post_id    INT     NULL DEFAULT NULL,
+    tag_id     INT     NULL DEFAULT NULL,
+    CONSTRAINT fk_posts_with_tags_posts_id
+    FOREIGN KEY (post_id)
+    REFERENCES posts (id)
+    ON DELETE CASCADE,
+    CONSTRAINT fk_posts_with_tags_tags_id
+    FOREIGN KEY (tag_id)
+    REFERENCES tags (id)
+    ON DELETE CASCADE
+    );
+
 CREATE TABLE IF NOT EXISTS users_comments_reactions
 (
     status     TINYINT NOT NULL,
@@ -101,3 +114,24 @@ CREATE TABLE IF NOT EXISTS users_posts_reactions
     REFERENCES users (id)
     ON DELETE CASCADE
     );
+
+INSERT INTO categories (id, category_type)
+VALUES (1, 'SPORTS');
+INSERT INTO categories (id, category_type)
+VALUES (2, 'HISTORY');
+INSERT INTO categories (id, category_type)
+VALUES (3, 'NEWS');
+INSERT INTO categories (id, category_type)
+VALUES (4, 'MUSIC');
+INSERT INTO categories (id, category_type)
+VALUES (5, 'CARS');
+INSERT INTO categories (id, category_type)
+VALUES (6, 'CRYPTO');
+INSERT INTO categories (id, category_type)
+VALUES (7, 'ANIMAL');
+INSERT INTO categories (id, category_type)
+VALUES (8, 'GAMES');
+INSERT INTO categories (id, category_type)
+VALUES (9, 'MOVIES');
+INSERT INTO categories (id, category_type)
+VALUES (10, 'LIFESTYLE');
