@@ -1,18 +1,20 @@
 package com.ittalens.gag.model.entity;
+
 import lombok.Data;
+
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
 @Data
-@Table(name = "users_posts_reactions")
-public class UserPostReaction {
+@Table(name = "users_comments_reactions")
+public class UserCommentReactionEntity {
     @EmbeddedId
-    private PostReactionKey id;
+    private CommentReactionKey id;
     @ManyToOne
-    @MapsId("postId")
-    @JoinColumn(name = "post_id")
-    private PostEntity post;
+    @MapsId("commentId")
+    @JoinColumn(name = "comment_id")
+    private CommentEntity comment;
     @ManyToOne
     @MapsId("userId")
     @JoinColumn(name = "user_id")
@@ -22,10 +24,12 @@ public class UserPostReaction {
 
     @Embeddable
     @Data
-    public static class PostReactionKey implements Serializable {
+    public static class CommentReactionKey implements Serializable{
+
         @Column(name = "user_id")
         private Long userId;
-        @Column(name = "post_id")
-        private Long postId;
+        @Column(name = "comment_id")
+        private Long commentId;
     }
+
 }

@@ -31,6 +31,8 @@ public class User {
     private boolean isActive;
     @OneToMany(mappedBy = "post")
     private Set<UserPostReaction> reactedPosts;
+    @OneToMany(mappedBy = "comment")
+    private Set<UserCommentReactionEntity> reactedComment;
 
 
 }

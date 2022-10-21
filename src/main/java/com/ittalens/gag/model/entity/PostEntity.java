@@ -31,7 +31,6 @@ public class PostEntity {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn (name = "tag_id"))
     private List<TagEntity> tags = new ArrayList();
-
     @OneToMany(mappedBy = "post")
     private Set<UserPostReaction> reactions;
 }
