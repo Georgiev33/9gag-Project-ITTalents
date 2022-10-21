@@ -27,7 +27,7 @@ public class PostEntity {
     @Column(name = "category_id")
     private Long categoryId;
     @ManyToMany
-    @JoinTable(name = "posts_with_tags",
+    @JoinTable(name = "post_with_tags",
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn (name = "tag_id"))
     private List<TagEntity> tags = new ArrayList();

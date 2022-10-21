@@ -150,9 +150,6 @@ public class UserService {
     }
 
     private boolean isUserNameFree(String username) {
-        if (!repository.findUserByUserName(username).isPresent()) {
-            return true;
-        }
-        return false;
+        return !repository.findUserByUserName(username).isPresent();
     }
 }

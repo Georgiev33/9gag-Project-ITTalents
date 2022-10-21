@@ -1,5 +1,7 @@
 package com.ittalens.gag.services;
 
+import com.ittalens.gag.model.dto.comments.ChildCommentDTO;
+import com.ittalens.gag.model.dto.comments.ChildCommentResponseDTO;
 import com.ittalens.gag.model.dto.comments.CommentReactionRespDTO;
 import com.ittalens.gag.model.dto.comments.ParentCommentDTO;
 import com.ittalens.gag.model.entity.*;
@@ -8,10 +10,14 @@ import com.ittalens.gag.model.repository.CommentReactionsRepository;
 import com.ittalens.gag.model.repository.CommentRepository;
 import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.print.DocFlavor;
+import javax.xml.stream.events.Comment;
 import java.time.LocalDateTime;
 
 @Service
@@ -25,6 +31,8 @@ public class CommentService {
     private final UserRepository userRepository;
     @Autowired
     private final CommentReactionsRepository reactionsRepository;
+    @Autowired
+    private final ModelMapper mapper;
 
     public void createdComment(ParentCommentDTO parentCommentDto, Long userId) {
         CommentEntity commentEntity = new CommentEntity();
@@ -64,5 +72,25 @@ public class CommentService {
         reactionRespDTO.setCurrentReactionStatus(status);
         return reactionRespDTO;
 
+    }
+
+    public ChildCommentResponseDTO createChildComment(ChildCommentDTO childCommentDTO, Long uId, Long cid) {
+        MultipartFile file = childCommentDTO.getFile();
+        CommentEntity comment = new CommentEntity();
+        CommentEntity parentComment = commentRepository.findById(cid).orElseThrow(() -> new NotFoundException("No such comment."));
+        if(file != null) {
+            String internalFileName = fileStoreService.saveFile(file);
+            comment.setResourcePath(internalFileName);
+        }
+
+        comment.setCommentEntity(parentComment);
+        comment.setCreatedBy(uId);
+        comment.setCreatedAt(LocalDateTime.now());
+        comment.setPostId(parentComment.getPostId());
+        comment.setText(childCommentDTO.getText());
+        commentRepository.save(comment);
+        ChildCommentResponseDTO responseDTO = mapper.map(comment, ChildCommentResponseDTO.class);
+        responseDTO.setPostId(parentComment.getPostId());
+        return responseDTO;
     }
 }

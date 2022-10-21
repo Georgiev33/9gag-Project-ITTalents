@@ -1,5 +1,6 @@
 package com.ittalens.gag.controller;
 
+import com.ittalens.gag.model.dto.comments.ChildCommentDTO;
 import com.ittalens.gag.model.dto.comments.CommentReactionDTO;
 import com.ittalens.gag.model.dto.comments.ParentCommentDTO;
 import com.ittalens.gag.services.CommentService;
@@ -30,5 +31,9 @@ public class CommentController {
         Long uId = Long.parseLong(session.getAttribute("USER_ID").toString());
         return ResponseEntity.ok(commentService.react(uId,commentReactionDTO.getCommentId(), commentReactionDTO.isStatus()));
     }
-
+    @PostMapping({"/{cid}"})
+    public ResponseEntity<?> createChildComment(@ModelAttribute ChildCommentDTO childCommentDTO, HttpSession session, @PathVariable Long cid){
+        Long uId = Long.parseLong(session.getAttribute("USER_ID").toString());
+        return ResponseEntity.ok(commentService.createChildComment(childCommentDTO, uId, cid));
+    }
 }

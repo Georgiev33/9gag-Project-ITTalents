@@ -17,7 +17,6 @@ import java.text.SimpleDateFormat;
 public class FileStoreService {
 
     public String saveFile(MultipartFile file) {
-
         Path pathToFile = Paths.get("uploads");
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new java.util.Date());
         try {
