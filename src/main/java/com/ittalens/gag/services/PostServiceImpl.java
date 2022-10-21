@@ -1,5 +1,4 @@
 package com.ittalens.gag.services;
-
 import com.ittalens.gag.model.dto.posts.PostCreateReqDTO;
 import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
 import com.ittalens.gag.model.dto.posts.PostRespDTO;
@@ -18,7 +17,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,6 +109,7 @@ public class PostServiceImpl implements PostService {
         }
         postRepository.delete(post);
     }
+
     public PostReactionResponseDTO react(long pid, boolean status){
         Long userId = userSessionService.currentUserId();
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("No such user."));
@@ -127,6 +126,7 @@ public class PostServiceImpl implements PostService {
         reactionsRepository.save(reaction);
 
         PostReactionResponseDTO responseDTO = new PostReactionResponseDTO();
+        responseDTO.setId(pid);
         responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
         responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
         responseDTO.setCurrentReactionStatus(status);
