@@ -40,7 +40,7 @@ public class PostService {
     @Autowired
     private final UserRepository userRepository;
     @Autowired
-    PostReactionsRepository reactionsRepository;
+    private final PostReactionsRepository reactionsRepository;
 
 
     public void createPost(PostCreateReqDTO postDto,Long userId) {

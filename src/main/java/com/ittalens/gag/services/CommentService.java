@@ -1,9 +1,7 @@
 package com.ittalens.gag.services;
 
-import com.ittalens.gag.model.dto.comments.ChildCommentDTO;
-import com.ittalens.gag.model.dto.comments.ChildCommentResponseDTO;
-import com.ittalens.gag.model.dto.comments.CommentReactionRespDTO;
-import com.ittalens.gag.model.dto.comments.ParentCommentDTO;
+import com.ittalens.gag.model.dto.comments.*;
+import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import com.ittalens.gag.model.entity.*;
 import com.ittalens.gag.model.exceptions.NotFoundException;
 import com.ittalens.gag.model.repository.CommentReactionsRepository;
@@ -19,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.print.DocFlavor;
 import javax.xml.stream.events.Comment;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -51,8 +51,8 @@ public class CommentService {
     }
 
     public CommentReactionRespDTO react(Long userId, Long commentId, boolean status) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("No such user"));
-        CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(() -> new NotFoundException("No such comment"));
+        User user = findUserById(userId);
+        CommentEntity commentEntity = findCommentById(commentId);
 
         UserCommentReactionEntity.CommentReactionKey key = new UserCommentReactionEntity.CommentReactionKey();
         key.setUserId(userId);
@@ -77,7 +77,7 @@ public class CommentService {
     public ChildCommentResponseDTO createChildComment(ChildCommentDTO childCommentDTO, Long uId, Long cid) {
         MultipartFile file = childCommentDTO.getFile();
         CommentEntity comment = new CommentEntity();
-        CommentEntity parentComment = commentRepository.findById(cid).orElseThrow(() -> new NotFoundException("No such comment."));
+        CommentEntity parentComment = findCommentById(cid);
         if(file != null) {
             String internalFileName = fileStoreService.saveFile(file);
             comment.setResourcePath(internalFileName);
@@ -92,5 +92,36 @@ public class CommentService {
         ChildCommentResponseDTO responseDTO = mapper.map(comment, ChildCommentResponseDTO.class);
         responseDTO.setPostId(parentComment.getPostId());
         return responseDTO;
+    }
+
+    public EditCommentDTO editComment(long cid, EditCommentDTO commentDTO) {
+        CommentEntity comment = findCommentById(cid);
+        comment.setText(commentDTO.getNewText());
+        commentRepository.save(comment);
+        return commentDTO;
+    }
+
+    public CommentResponseDTO getCommentById(long cid) {
+        CommentEntity comment = findCommentById(cid);
+        return mapper.map(comment, CommentResponseDTO.class);
+    }
+
+    public List<CommentResponseDTO> getAllPostComments(long pid) {
+        return commentRepository.findAllByPostId(pid).
+                stream().map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
+                collect(Collectors.toList());
+    }
+
+    public void deleteComment(long cid) {
+        CommentEntity comment = findCommentById(cid);
+        commentRepository.delete(comment);
+    }
+
+    private CommentEntity findCommentById(long cid){
+        return commentRepository.findById(cid).orElseThrow(() -> new NotFoundException("No such comment."));
+    }
+
+    private User findUserById(long uid){
+        return userRepository.findById(uid).orElseThrow(() -> new NotFoundException("No such user."));
     }
 }
