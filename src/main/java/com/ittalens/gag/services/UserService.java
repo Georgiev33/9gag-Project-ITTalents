@@ -7,11 +7,14 @@ import com.ittalens.gag.model.exceptions.NotFoundException;
 import com.ittalens.gag.model.exceptions.UnauthorizedException;
 import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import net.bytebuddy.utility.RandomString;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -21,11 +24,13 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class UserService {
     @Autowired
-    private UserRepository repository;
+    private final UserRepository repository;
     @Autowired
-    private ModelMapper mapper;
+    private final ModelMapper mapper;
     @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    @Autowired
+    private final EmailSenderService emailSenderService;
 
     public void registerUser(RegisterUserDTO u) {
         if (!validateEmail(u.getEmail())) {
@@ -41,10 +46,18 @@ public class UserService {
             throw new BadRequestException("Username already exists");
         }
         u.setRegisterDate(LocalDateTime.now());
-        u.setActive(true);
+        u.setActive(false);
         User user = mapper.map(u, User.class);
+        String verificationCode = RandomString.make(50);
+        user.setVerificationCode(verificationCode);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         repository.save(user);
+
+        try {
+            emailSenderService.sendVerificationEmail(user);
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            throw new UnauthorizedException("Have a problem with email");
+        }
     }
 
     public UserWithoutPasswordDTO getUserById(long id) {
@@ -125,7 +138,7 @@ public class UserService {
             throw new BadRequestException("User or password doesn't match.");
         }
 
-        if (!user.isActive()){
+        if (!user.isActive()) {
             throw new UnauthorizedException("User or password doesn't match.");
         }
         return mapper.map(user, UserWithoutPasswordDTO.class);
@@ -151,5 +164,11 @@ public class UserService {
 
     private boolean isUserNameFree(String username) {
         return !repository.findUserByUserName(username).isPresent();
+    }
+
+    public void comparingVerificationCode(String code) {
+        User user = repository.findByVerificationCode(code).orElseThrow(() -> new UnauthorizedException("Not correct verification code"));
+        user.setActive(true);
+        repository.save(user);
     }
 }

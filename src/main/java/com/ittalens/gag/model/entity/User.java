@@ -29,6 +29,8 @@ public class User {
     private LocalDateTime registerDate;
     @Column
     private boolean isActive;
+    @Column(name = "verification_code")
+    private String verificationCode;
     @OneToMany(mappedBy = "post")
     private Set<UserPostReaction> reactedPosts;
     @OneToMany(mappedBy = "comment")

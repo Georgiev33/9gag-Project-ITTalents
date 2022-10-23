@@ -23,41 +23,52 @@ public class UserController {
 
     @PostMapping("/register")
     @ResponseStatus(code = HttpStatus.CREATED)
-    public ResponseEntity<RegisterUserDTO> registerUser(@RequestBody RegisterUserDTO userDTO){
-            userService.registerUser(userDTO);
-            return ResponseEntity.ok().build();
+    public ResponseEntity<RegisterUserDTO> registerUser(@RequestBody RegisterUserDTO userDTO) {
+        userService.registerUser(userDTO);
+        return ResponseEntity.ok().build();
     }
+
     @PostMapping("/auth")
-    public ResponseEntity<UserWithoutPasswordDTO> login(@RequestBody UserLoginDTO userDTO, HttpSession s){
+    public ResponseEntity<UserWithoutPasswordDTO> login(@RequestBody UserLoginDTO userDTO, HttpSession s) {
         UserWithoutPasswordDTO result = userService.login(userDTO);
-        if(result!= null) {
+        if (result != null) {
             s.setAttribute("LOGGED", true);
             s.setAttribute("USER_ID", result.getId());
         }
         return ResponseEntity.ok(result);
     }
+
     @PutMapping()
-    public ResponseEntity<UserWithoutPasswordDTO> edit(@RequestBody EditUserDTO userDTO, HttpSession s){
-            UserWithoutPasswordDTO result = userService.edit((Integer) s.getAttribute("USER_ID"), userDTO);
-            return ResponseEntity.ok(result);
-    }
-    @PutMapping("/pass")
-    public ResponseEntity<UserWithoutPasswordDTO> editPass(@RequestBody ChangePasswordDTO userDTO, HttpSession s){
-            UserWithoutPasswordDTO result = userService.editPass(userDTO, (Integer) s.getAttribute("USER_ID"));
-            return ResponseEntity.ok(result);
-    }
-    @GetMapping("/{id}")
-    public ResponseEntity<UserWithoutPasswordDTO> getById(@PathVariable long id){
-       return ResponseEntity.ok(userService.getUserById(id));
-    }
-    @GetMapping
-    public List<UserWithoutPasswordDTO> getAllUsers(){
-        return userService.getAllUsers();
-    }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable long id){
-       userService.delete(id);
-       return ResponseEntity.ok().build();
+    public ResponseEntity<UserWithoutPasswordDTO> edit(@RequestBody EditUserDTO userDTO, HttpSession s) {
+        UserWithoutPasswordDTO result = userService.edit((Integer) s.getAttribute("USER_ID"), userDTO);
+        return ResponseEntity.ok(result);
     }
 
+    @PutMapping("/pass")
+    public ResponseEntity<UserWithoutPasswordDTO> editPass(@RequestBody ChangePasswordDTO userDTO, HttpSession s) {
+        UserWithoutPasswordDTO result = userService.editPass(userDTO, (Integer) s.getAttribute("USER_ID"));
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserWithoutPasswordDTO> getById(@PathVariable long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    @GetMapping
+    public List<UserWithoutPasswordDTO> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable long id) {
+        userService.delete(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{code}")
+    public ResponseEntity<?> verificatinCode(@PathVariable String code){
+        userService.comparingVerificationCode(code);
+        return ResponseEntity.ok("Еmail has been verified");
+    }
 }

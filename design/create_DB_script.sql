@@ -3,15 +3,16 @@ USE 9gag;
 
 CREATE TABLE IF NOT EXISTS users
 (
-    id         INT          NOT NULL AUTO_INCREMENT,
-    first_name VARCHAR(100) NOT NULL,
-    last_name  VARCHAR(100) NOT NULL,
-    age        INT          NOT NULL,
-    user_name  VARCHAR(100) NOT NULL,
-    email      VARCHAR(100) NOT NULL,
-    password   VARCHAR(100) NOT NULL,
-    created_at DATETIME     NOT NULL,
-    is_active  TINYINT      NOT NULL,
+    id                  INT          NOT NULL AUTO_INCREMENT,
+    first_name          VARCHAR(100) NOT NULL,
+    last_name           VARCHAR(100) NOT NULL,
+    age                 INT          NOT NULL,
+    user_name           VARCHAR(100) NOT NULL,
+    email               VARCHAR(100) NOT NULL,
+    password            VARCHAR(100) NOT NULL,
+    created_at          DATETIME     NOT NULL,
+    is_active           TINYINT      NOT NULL,
+    verification_code   VARCHAR(50)  NULL,
     PRIMARY KEY (id)
     );
 
