@@ -20,12 +20,7 @@ public class SecurityFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String requestURI = request.getRequestURI();
 
-        if (requestURI.contains("/users/auth")) {
-            chain.doFilter(servletRequest, servletResponse);
-            return;
-        }
-
-        if (requestURI.contains("/users/register")) {
+        if (requestURI.contains("/users/register") || requestURI.contains("/users") || requestURI.contains("/users/auth")) {
             chain.doFilter(servletRequest, servletResponse);
             return;
         }

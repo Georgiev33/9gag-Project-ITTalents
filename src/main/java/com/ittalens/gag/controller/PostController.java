@@ -37,8 +37,8 @@ public class PostController {
         return postService.getAllByCreationDate();
     }
 
-    @GetMapping()
-    private ResponseEntity<?> getAllPostsByWord(@RequestParam String word) {
+    @GetMapping("/{word}")
+    private ResponseEntity<?> getAllPostsByWord(@PathVariable String word) {
         List<PostRespDTO> posts = postService.findPostsByWord(word);
         return ResponseEntity.ok(posts);
     }
@@ -50,8 +50,8 @@ public class PostController {
     }
 
     @PutMapping("{pid}/react")
-    private ResponseEntity<PostReactionResponseDTO> react(@PathVariable long pid, @RequestBody PostReactionDTO reactionDTO, HttpSession session){
-        return ResponseEntity.ok(postService.react(pid,Long.parseLong(session.getAttribute("USER_ID").toString()), reactionDTO.isStatus()));
+    private ResponseEntity<PostReactionResponseDTO> react(@PathVariable long pid, @RequestBody PostReactionDTO reactionDTO, HttpSession session) {
+        return ResponseEntity.ok(postService.react(pid, Long.parseLong(session.getAttribute("USER_ID").toString()), reactionDTO.isStatus()));
     }
 
 }
