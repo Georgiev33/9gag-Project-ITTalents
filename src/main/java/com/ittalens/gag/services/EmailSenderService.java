@@ -21,7 +21,7 @@ public class EmailSenderService {
         String subject = "Please verify your registration";
         String senderName = "Nine GAG service";
         String mailContent = "<p>Dear " + user.getFirstName() + " " + user.getLastName() + ",<p>";
-        mailContent += "<p>Please click the link below to verify to your registration: <p>";
+        mailContent += "<p>Please click the link below to verify your registration: <p>";
         mailContent += "<p>" + verifyURL + "<p>";
         mailContent += "<p> Thank you very much! <p>";
 

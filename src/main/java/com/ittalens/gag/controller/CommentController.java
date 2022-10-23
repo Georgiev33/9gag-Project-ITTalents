@@ -38,7 +38,7 @@ public class CommentController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping({"/{cid}"})
+    @PostMapping("/{cid}")
     public ResponseEntity<?> createChildComment(@ModelAttribute ChildCommentDTO childCommentDTO, HttpSession session, @PathVariable Long cid){
         Long uId = Long.parseLong(session.getAttribute("USER_ID").toString());
         return ResponseEntity.ok(commentService.createChildComment(childCommentDTO, uId, cid));

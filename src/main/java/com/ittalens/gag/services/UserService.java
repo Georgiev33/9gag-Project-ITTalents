@@ -61,30 +61,27 @@ public class UserService {
     }
 
     public UserWithoutPasswordDTO getUserById(long id) {
-        Optional<User> optionalUser = repository.findById(id);
-        if (optionalUser.isPresent()) {
-            return mapper.map(optionalUser.get(), UserWithoutPasswordDTO.class);
-        }
-        throw new NotFoundException("User doesn't exist.");
+        User user = findById(id);
+        return mapper.map(user, UserWithoutPasswordDTO.class);
     }
 
     public void delete(long id) {
-        if (repository.findById(id).isPresent()) {
-            User u = repository.findById(id).get();
+            User u = findById(id);
             if (!u.isActive()) {
                 throw new BadRequestException("User is already deleted.");
             }
+            u.setUserName(RandomString.make(99));
+            u.setEmail(RandomString.make(99));
+            u.setFirstName(RandomString.make(99));
+            u.setLastName(RandomString.make(99));
+            u.setPassword(RandomString.make(99));
             u.setActive(false);
             repository.save(u);
             return;
-        }
-        throw new NotFoundException("User doesn't exist.");
     }
 
     public UserWithoutPasswordDTO edit(long userId, EditUserDTO editUserDTO) {
-        Optional<User> user = repository.findById(userId);
-        if (user.isPresent()) {
-            User u = user.get();
+            User u = findById(userId);
             if (editUserDTO.getUserName() != null && !editUserDTO.getUserName().equals(u.getUserName())) {
                 if (!isUserNameFree(editUserDTO.getUserName())) {
                     throw new BadRequestException("Unique usernames only!");
@@ -111,14 +108,10 @@ public class UserService {
             }
             repository.save(u);
             return mapper.map(u, UserWithoutPasswordDTO.class);
-        }
-        throw new NotFoundException("No such user.");
     }
 
     public UserWithoutPasswordDTO editPass(ChangePasswordDTO userDTO, long id) {
-        Optional<User> optionalUser = repository.findById(id);
-        if (optionalUser.isPresent()) {
-            User u = optionalUser.get();
+            User u = findById(id);
             if (!bCryptPasswordEncoder.matches(userDTO.getCurrentPassword(), u.getPassword())) {
                 throw new BadRequestException("Invalid credentials.");
             }
@@ -128,8 +121,6 @@ public class UserService {
             u.setPassword(bCryptPasswordEncoder.encode(userDTO.getNewPassword()));
             repository.save(u);
             return mapper.map(u, UserWithoutPasswordDTO.class);
-        }
-        throw new BadRequestException("No such user.");
     }
 
     public UserWithoutPasswordDTO login(UserLoginDTO userDTO) {
@@ -170,5 +161,9 @@ public class UserService {
         User user = repository.findByVerificationCode(code).orElseThrow(() -> new UnauthorizedException("Not correct verification code"));
         user.setActive(true);
         repository.save(user);
+    }
+
+    private User findById(long uid){
+        return repository.findById(uid).orElseThrow(() -> new NotFoundException("User not found."));
     }
 }

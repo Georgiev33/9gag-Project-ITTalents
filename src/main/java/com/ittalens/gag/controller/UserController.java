@@ -38,6 +38,12 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession s){
+        s.invalidate();
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping()
     public ResponseEntity<UserWithoutPasswordDTO> edit(@RequestBody EditUserDTO userDTO, HttpSession s) {
         UserWithoutPasswordDTO result = userService.edit((Integer) s.getAttribute("USER_ID"), userDTO);
