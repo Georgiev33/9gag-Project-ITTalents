@@ -128,5 +128,7 @@
     <orderEntry type="library" name="Maven: org.springframework:spring-context-support:5.3.23" level="project" />
     <orderEntry type="library" name="Maven: com.sun.mail:jakarta.mail:1.6.7" level="project" />
     <orderEntry type="library" name="Maven: com.sun.activation:jakarta.activation:1.2.2" level="project" />
+    <orderEntry type="library" name="Maven: commons-fileupload:commons-fileupload:1.4" level="project" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.2" level="project" />
   </component>
 </module>

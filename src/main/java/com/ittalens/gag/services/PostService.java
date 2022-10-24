@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,6 +96,10 @@ public class PostService {
     public List<PostRespDTO> findPostsByWord(String word) {
         List<PostEntity> postEntities = postRepository.findByTitleContains(word);
 
+        if (postEntities.isEmpty()){
+            throw new NotFoundException("Don't have a post with this word");
+        }
+
         List<PostRespDTO> postDtos = postEntities.stream()
                 .map(postEntity -> modelMapper.map(postEntity, PostRespDTO.class))
                 .collect(Collectors.toList());
@@ -129,4 +134,15 @@ public class PostService {
         return responseDTO;
     }
 
+    public PostRespDTO getPostById(String pid) {
+        Long postId = Long.parseLong(pid);
+        PostEntity post = postRepository.findById(postId).orElseThrow(() ->  new NotFoundException("This post does not exist"));
+        PostRespDTO postRespDTO = modelMapper.map(post, PostRespDTO.class);
+        return postRespDTO;
+    }
+
+    public File takeFile(String pid) {
+        PostRespDTO postRespDTO = getPostById(pid);
+        return fileStoreService.getFile(postRespDTO.getResourcePath());
+    }
 }

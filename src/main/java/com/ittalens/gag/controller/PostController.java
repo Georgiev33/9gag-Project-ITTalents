@@ -6,11 +6,15 @@ import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
 import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import com.ittalens.gag.services.PostService;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 @RestController
@@ -43,15 +47,29 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
-    @DeleteMapping()
-    private ResponseEntity<?> deletedPost(@RequestParam Long id) {
-        postService.deletedPostById(id);
-        return ResponseEntity.ok().build();
+    @DeleteMapping("/delete/{id}")
+    private ResponseEntity<?> deletedPost(@PathVariable String id) {
+        postService.deletedPostById(Long.parseLong(id));
+        return ResponseEntity.ok("Post was deleted!");
     }
 
     @PutMapping("{pid}/react")
     private ResponseEntity<PostReactionResponseDTO> react(@PathVariable long pid, @RequestBody PostReactionDTO reactionDTO, HttpSession session) {
         return ResponseEntity.ok(postService.react(pid, Long.parseLong(session.getAttribute("USER_ID").toString()), reactionDTO.isStatus()));
+    }
+
+    @GetMapping("/download/{pid}")
+    @SneakyThrows
+    private void downloadPostById(@PathVariable String pid, HttpServletResponse response) {
+        File file = postService.takeFile(pid);
+        response.setContentType(Files.probeContentType(file.toPath()));
+        Files.copy(file.toPath(), response.getOutputStream());
+    }
+
+    @GetMapping("/post/{pid}")
+    private ResponseEntity<PostRespDTO> getPostById(@PathVariable String pid) {
+        PostRespDTO postRespDTO = postService.getPostById(pid);
+        return ResponseEntity.ok(postRespDTO);
     }
 
 }
