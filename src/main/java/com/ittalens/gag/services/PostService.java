@@ -13,6 +13,7 @@ import com.ittalens.gag.model.repository.PostRepository;
 import com.ittalens.gag.model.repository.TagRepository;
 import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.aspectj.weaver.ast.Not;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -112,12 +113,15 @@ public class PostService {
     }
 
     public PostReactionResponseDTO react(Long pId, Long uId, boolean status){
-        Long userId = uId;
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("No such user."));
+        User user = userRepository.findById(uId).orElseThrow(() -> new NotFoundException("No such user."));
         PostEntity post = postRepository.findById(pId).orElseThrow(() -> new NotFoundException("No such post."));
+
         UserPostReaction.PostReactionKey key = new UserPostReaction.PostReactionKey();
         key.setPostId(pId);
-        key.setUserId(userId);
+        key.setUserId(uId);
+        if(reactionsRepository.findById(key).isPresent() && reactionsRepository.findById(key).get().isStatus() == status){
+            return deleteReaction(key);
+        }
 
         UserPostReaction reaction = new UserPostReaction();
         reaction.setPost(post);
@@ -131,6 +135,21 @@ public class PostService {
         responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
         responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
         responseDTO.setCurrentReactionStatus(status);
+        return responseDTO;
+    }
+
+    private PostReactionResponseDTO deleteReaction(UserPostReaction.PostReactionKey key){
+        UserPostReaction reaction = reactionsRepository.findById(key).orElseThrow(() -> new NotFoundException("Reaction not found."));
+        PostReactionResponseDTO responseDTO = new PostReactionResponseDTO();
+        responseDTO.setId(reaction.getPost().getId());
+        if(reaction.isStatus()) {
+            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key) - 1);
+            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
+        }else{
+            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
+            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key) - 1);
+        }
+        reactionsRepository.delete(reaction);
         return responseDTO;
     }
 

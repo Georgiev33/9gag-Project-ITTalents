@@ -1,6 +1,7 @@
 package com.ittalens.gag.services;
 
 import com.ittalens.gag.model.dto.comments.*;
+import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
 import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import com.ittalens.gag.model.entity.*;
 import com.ittalens.gag.model.exceptions.NotFoundException;
@@ -57,7 +58,9 @@ public class CommentService {
         UserCommentReactionEntity.CommentReactionKey key = new UserCommentReactionEntity.CommentReactionKey();
         key.setUserId(userId);
         key.setCommentId(commentId);
-
+        if(reactionsRepository.findById(key).isPresent() && reactionsRepository.findById(key).get().isStatus() == status){
+            return deleteReaction(key);
+        }
         UserCommentReactionEntity reaction = new UserCommentReactionEntity();
         reaction.setComment(commentEntity);
         reaction.setUser(user);
@@ -123,5 +126,19 @@ public class CommentService {
 
     private User findUserById(long uid){
         return userRepository.findById(uid).orElseThrow(() -> new NotFoundException("No such user."));
+    }
+    private CommentReactionRespDTO deleteReaction(UserCommentReactionEntity.CommentReactionKey key) {
+        UserCommentReactionEntity reaction = reactionsRepository.findById(key).orElseThrow(() -> new NotFoundException("Reaction not found."));
+        CommentReactionRespDTO responseDTO = new CommentReactionRespDTO();
+        responseDTO.setId(reaction.getComment().getId());
+        if(reaction.isStatus()) {
+            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key) - 1);
+            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
+        }else{
+            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
+            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key) - 1);
+        }
+        reactionsRepository.delete(reaction);
+        return responseDTO;
     }
 }
