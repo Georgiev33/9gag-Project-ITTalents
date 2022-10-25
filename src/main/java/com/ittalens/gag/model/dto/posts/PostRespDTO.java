@@ -10,6 +10,7 @@ public class PostRespDTO {
     private Long id;
     private String title;
     private String resourcePath;
+    private String resourceURL;
     private LocalDateTime createdAt;
     private Long createdBy;
     private long categoryId;
