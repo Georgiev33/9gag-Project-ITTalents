@@ -4,6 +4,7 @@ import com.ittalens.gag.model.dto.comments.*;
 import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
 import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import com.ittalens.gag.model.entity.*;
+import com.ittalens.gag.model.exceptions.BadRequestException;
 import com.ittalens.gag.model.exceptions.NotFoundException;
 import com.ittalens.gag.model.repository.CommentReactionsRepository;
 import com.ittalens.gag.model.repository.CommentRepository;
@@ -11,14 +12,10 @@ import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.print.DocFlavor;
-import javax.xml.stream.events.Comment;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -109,23 +106,26 @@ public class CommentService {
         return mapper.map(comment, CommentResponseDTO.class);
     }
 
-    public List<CommentResponseDTO> getAllPostComments(long pid) {
-        return commentRepository.findAllByPostId(pid).
-                stream().map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
-                collect(Collectors.toList());
+    public Page<CommentResponseDTO> getAllCommentReplies(long cid, int offset, int pageSize) {
+        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityId(cid, PageRequest.of(offset, pageSize));
+        return new PageImpl<>(commentEntityPage.stream().map(commentEntity -> mapper
+                .map(commentEntity, CommentResponseDTO.class)).collect(Collectors.toList()));
     }
 
-    public void deleteComment(long cid) {
-        CommentEntity comment = findCommentById(cid);
-        commentRepository.delete(comment);
-    }
-
-    private CommentEntity findCommentById(long cid){
-        return commentRepository.findById(cid).orElseThrow(() -> new NotFoundException("No such comment."));
-    }
-
-    private User findUserById(long uid){
-        return userRepository.findById(uid).orElseThrow(() -> new NotFoundException("No such user."));
+    public Page<CommentResponseDTO> getAllPostComments(long pid, String commentOrder, int offset, int pageSize) {
+        if(commentOrder.toLowerCase().equals("fresh")) {
+            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of(offset, pageSize).withSort(Sort.by("createdAt")));
+            return new PageImpl<>(commentsPage.stream()
+                    .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
+                    collect(Collectors.toList()));
+        }
+        if(commentOrder.toLowerCase().equals("hot")){
+                Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of(offset, pageSize));
+            return new PageImpl<>(commentsPage.stream().sorted((o1, o2) -> o2.getReactions().size() - o1.getReactions().size())
+                    .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
+                    collect(Collectors.toList()));
+        }
+        throw new BadRequestException("No such filter.");
     }
     private CommentReactionRespDTO deleteReaction(UserCommentReactionEntity.CommentReactionKey key) {
         UserCommentReactionEntity reaction = reactionsRepository.findById(key).orElseThrow(() -> new NotFoundException("Reaction not found."));
@@ -140,5 +140,19 @@ public class CommentService {
         }
         reactionsRepository.delete(reaction);
         return responseDTO;
+
+    }
+
+    public void deleteComment(long cid) {
+        CommentEntity comment = findCommentById(cid);
+        commentRepository.delete(comment);
+    }
+
+    private CommentEntity findCommentById(long cid){
+        return commentRepository.findById(cid).orElseThrow(() -> new NotFoundException("No such comment."));
+    }
+
+    private User findUserById(long uid){
+        return userRepository.findById(uid).orElseThrow(() -> new NotFoundException("No such user."));
     }
 }

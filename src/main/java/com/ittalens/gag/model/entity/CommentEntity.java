@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -28,7 +29,7 @@ public class CommentEntity {
     @Column(name = "created_by")
     private Long createdBy;
     @OneToMany(mappedBy = "comment")
-    private Set<UserCommentReactionEntity> reactions;
+    private List<UserCommentReactionEntity> reactions;
 
 
 }

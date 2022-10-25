@@ -6,7 +6,6 @@ import com.ittalens.gag.model.dto.comments.EditCommentDTO;
 import com.ittalens.gag.model.dto.comments.ParentCommentDTO;
 import com.ittalens.gag.services.CommentService;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +20,9 @@ public class CommentController {
     @Autowired
     private final CommentService commentService;
 
-    @GetMapping("/post/{pid}")
-    private ResponseEntity<?> getAllPostComments(@PathVariable long pid){
-        return ResponseEntity.ok(commentService.getAllPostComments(pid));
+    @GetMapping("/post/{pid}/{commentOrder}/{offset}/{pageSize}")
+    private ResponseEntity<?> getAllPostComments(@PathVariable long pid, @PathVariable String commentOrder, @PathVariable int offset, @PathVariable int pageSize){
+        return ResponseEntity.ok(commentService.getAllPostComments(pid, commentOrder, offset, pageSize));
     }
 
     @GetMapping("/{cid}")
@@ -59,5 +58,9 @@ public class CommentController {
     public ResponseEntity<?> deleteComment(@PathVariable long cid){
         commentService.deleteComment(cid);
         return ResponseEntity.ok().build();
+    }
+    @GetMapping("/replies/{cid}/{offset}/{pageSize}")
+    public ResponseEntity<?> getAllCommentReplies(@PathVariable long cid, @PathVariable int offset, @PathVariable int pageSize){
+        return ResponseEntity.ok(commentService.getAllCommentReplies(cid, offset, pageSize));
     }
 }
