@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CommentReactionsRepository extends JpaRepository<UserCommentReactionEntity, UserCommentReactionEntity.CommentReactionKey> {
-    int countAllByStatusIsTrueAndIdIs(UserCommentReactionEntity.CommentReactionKey key);
-    int countAllByStatusIsFalseAndIdIs(UserCommentReactionEntity.CommentReactionKey key);
+    int countAllByStatusIsTrueAndCommentId(long commentId);
+    int countAllByStatusIsFalseAndCommentId(long commentId);
 }

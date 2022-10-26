@@ -3,8 +3,7 @@ package com.ittalens.gag.model.entity;
 import lombok.Data;
 import javax.persistence.*;
 import java.time.LocalDateTime;
-
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Data
@@ -32,9 +31,9 @@ public class User {
     @Column(name = "verification_code")
     private String verificationCode;
     @OneToMany(mappedBy = "post")
-    private Set<UserPostReaction> reactedPosts;
+    private List<UserPostReaction> reactedPosts;
     @OneToMany(mappedBy = "comment")
-    private Set<UserCommentReactionEntity> reactedComment;
+    private List<UserCommentReactionEntity> reactedComment;
 
 
 }

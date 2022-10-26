@@ -1,6 +1,8 @@
 package com.ittalens.gag.model.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -12,7 +14,6 @@ import java.util.Set;
 @Data
 @Table(name = "posts")
 public class PostEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,5 +33,5 @@ public class PostEntity {
             inverseJoinColumns = @JoinColumn (name = "tag_id"))
     private List<TagEntity> tags = new ArrayList();
     @OneToMany(mappedBy = "post")
-    private Set<UserPostReaction> reactions;
+    private List<UserPostReaction> reactions;
 }

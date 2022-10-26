@@ -72,9 +72,9 @@ public class PostController {
         return ResponseEntity.ok(postRespDTO);
     }
 
-    @GetMapping("/category/{categoryId}/{offset}/{pageSize}")
-    private Page<PostRespDTO> getAllPostsCategory(@PathVariable Long categoryId, @PathVariable int offset, @PathVariable int pageSize) {
-        return postService.getAllPostsCategory(categoryId, offset, pageSize);
+    @GetMapping("/category/{categoryId}/{postOrder}/{offset}/{pageSize}")
+    private Page<PostRespDTO> getAllPostsCategory(@PathVariable Long categoryId, @PathVariable int offset, @PathVariable int pageSize, @PathVariable String postOrder) {
+        return postService.getAllPostsCategory(categoryId, offset, pageSize, postOrder);
     }
 
     @GetMapping("/tag/{type}/{offset}/{pageSize}")

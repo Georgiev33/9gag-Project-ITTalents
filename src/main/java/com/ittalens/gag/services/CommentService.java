@@ -1,8 +1,6 @@
 package com.ittalens.gag.services;
 
 import com.ittalens.gag.model.dto.comments.*;
-import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
-import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import com.ittalens.gag.model.entity.*;
 import com.ittalens.gag.model.exceptions.BadRequestException;
 import com.ittalens.gag.model.exceptions.NotFoundException;
@@ -31,6 +29,7 @@ public class CommentService {
     private final CommentReactionsRepository reactionsRepository;
     @Autowired
     private final ModelMapper mapper;
+
 
     public void createdComment(ParentCommentDTO parentCommentDto, Long userId) {
         CommentEntity commentEntity = new CommentEntity();
@@ -67,8 +66,8 @@ public class CommentService {
 
         CommentReactionRespDTO reactionRespDTO = new CommentReactionRespDTO();
         reactionRespDTO.setId(commentId);
-        reactionRespDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
-        reactionRespDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
+        reactionRespDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndCommentId(commentEntity.getId()));
+        reactionRespDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndCommentId(commentEntity.getId()));
         reactionRespDTO.setCurrentReactionStatus(status);
         return reactionRespDTO;
 
@@ -107,7 +106,7 @@ public class CommentService {
     }
 
     public Page<CommentResponseDTO> getAllCommentReplies(long cid, int offset, int pageSize) {
-        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityId(cid, PageRequest.of(offset, pageSize));
+        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityIdOOrderByCreatedAtDesc(cid, PageRequest.of(offset, pageSize));
         return new PageImpl<>(commentEntityPage.stream().map(commentEntity -> mapper
                 .map(commentEntity, CommentResponseDTO.class)).collect(Collectors.toList()));
     }
@@ -131,14 +130,14 @@ public class CommentService {
         UserCommentReactionEntity reaction = reactionsRepository.findById(key).orElseThrow(() -> new NotFoundException("Reaction not found."));
         CommentReactionRespDTO responseDTO = new CommentReactionRespDTO();
         responseDTO.setId(reaction.getComment().getId());
-        if(reaction.isStatus()) {
-            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key) - 1);
-            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
-        }else{
-            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
-            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key) - 1);
-        }
         reactionsRepository.delete(reaction);
+        if(reaction.isStatus()) {
+            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndCommentId(reaction.getComment().getId()));
+            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndCommentId(reaction.getComment().getId()));
+        }else{
+            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndCommentId(reaction.getComment().getId()));
+            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndCommentId(reaction.getComment().getId()));
+        }
         return responseDTO;
 
     }

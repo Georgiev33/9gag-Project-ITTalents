@@ -35,7 +35,7 @@ public class UserService {
         if (!validateEmail(u.getEmail())) {
             throw new BadRequestException("email already exists.");
         }
-        if (u.getAge() < 16 || u.getAge() > 110) {
+        if (u.getAge() < 16 || u.getAge() > 119) {
             throw new BadRequestException("Invalid age.");
         }
         if (!u.getPassword().equals(u.getRepeatedPassword())) {

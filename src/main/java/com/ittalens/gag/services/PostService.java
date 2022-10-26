@@ -14,15 +14,18 @@ import com.ittalens.gag.model.repository.PostRepository;
 import com.ittalens.gag.model.repository.TagRepository;
 import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import net.bytebuddy.dynamic.scaffold.MethodRegistry;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.sql.PreparedStatement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +49,6 @@ public class PostService {
     private final UserRepository userRepository;
     @Autowired
     private final PostReactionsRepository reactionsRepository;
-
 
     public void createPost(PostCreateReqDTO postDto, Long userId) {
         MultipartFile originalFile = postDto.getFile();
@@ -87,7 +89,7 @@ public class PostService {
             throw new NotFoundException("Don't have a posts");
         }
 
-        Page<PostRespDTO> postDtos = pageMapingToDTO(postEntities);
+        Page<PostRespDTO> postDtos = pageMappingToDTO(postEntities);
         setURL(postDtos);
         return postDtos;
     }
@@ -103,7 +105,8 @@ public class PostService {
         }
 
         for(PostRespDTO postRespDTO : postDtos){
-            postRespDTO.setResourcePath("http://localhost:8080/posts/download/" + postRespDTO.getId());
+            postRespDTO.setResourceURL("http://localhost:8080/posts/download/" + postRespDTO.getId());
+            setReactions(postRespDTO);
         }
         return postDtos;
     }
@@ -114,7 +117,7 @@ public class PostService {
             throw new NotFoundException("Don't have a post with this word");
         }
 
-        Page<PostRespDTO> postDtos = pageMapingToDTO(postEntities);
+        Page<PostRespDTO> postDtos = pageMappingToDTO(postEntities);
         setURL(postDtos);
         return postDtos;
     }
@@ -144,8 +147,8 @@ public class PostService {
 
         PostReactionResponseDTO responseDTO = new PostReactionResponseDTO();
         responseDTO.setId(pId);
-        responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
-        responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
+        responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(post.getId()));
+        responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(post.getId()));
         responseDTO.setCurrentReactionStatus(status);
         return responseDTO;
     }
@@ -154,14 +157,14 @@ public class PostService {
         UserPostReaction reaction = reactionsRepository.findById(key).orElseThrow(() -> new NotFoundException("Reaction not found."));
         PostReactionResponseDTO responseDTO = new PostReactionResponseDTO();
         responseDTO.setId(reaction.getPost().getId());
-        if (reaction.isStatus()) {
-            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key) - 1);
-            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key));
-        } else {
-            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndIdIs(key));
-            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndIdIs(key) - 1);
-        }
         reactionsRepository.delete(reaction);
+        if (reaction.isStatus()) {
+            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(reaction.getPost().getId()));
+            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(reaction.getPost().getId()));
+        } else {
+            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(reaction.getPost().getId()));
+            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(reaction.getPost().getId()));
+        }
         return responseDTO;
     }
 
@@ -170,6 +173,7 @@ public class PostService {
         PostEntity post = postRepository.findById(postId).orElseThrow(() -> new NotFoundException("This post does not exist"));
         PostRespDTO postRespDTO = modelMapper.map(post, PostRespDTO.class);
         postRespDTO.setResourceURL("http://localhost:8080/posts/download/" + postRespDTO.getId());
+        setReactions(postRespDTO);
         return postRespDTO;
     }
 
@@ -178,18 +182,17 @@ public class PostService {
         return fileStoreService.getFile(filePath);
     }
 
-    public Page<PostRespDTO> getAllPostsCategory(Long categoryId, int offset, int pageSize) {
+    public Page<PostRespDTO> getAllPostsCategory(Long categoryId, int offset, int pageSize, String postOrder) {
         Page<PostEntity> postEntities = postRepository.findAllByCategoryId(categoryId, PageRequest.of(offset, pageSize));
         if (postEntities.isEmpty()) {
             throw new NotFoundException("Don't have a post with this category");
         }
-
-        Page<PostRespDTO> postRespDTOPage = pageMapingToDTO(postEntities);
+        Page<PostRespDTO> postRespDTOPage = pageMappingToDTO(postEntities);
         setURL(postRespDTOPage);
         return postRespDTOPage;
     }
 
-    private Page<PostRespDTO> pageMapingToDTO(Page<PostEntity> postEntities) {
+    private Page<PostRespDTO> pageMappingToDTO(Page<PostEntity> postEntities) {
         return new PageImpl<>(postEntities.stream()
                 .map(postEntity -> modelMapper.map(postEntity, PostRespDTO.class))
                 .collect(Collectors.toList()));
@@ -198,6 +201,7 @@ public class PostService {
     private void setURL(Page<PostRespDTO> postDtos) {
         for (PostRespDTO postRespDTO : postDtos) {
             postRespDTO.setResourceURL("http://localhost:8080/posts/download/" + postRespDTO.getId());
+            setReactions(postRespDTO);
         }
     }
 
@@ -212,8 +216,13 @@ public class PostService {
             throw new NotFoundException("Don't have a post with this tag");
         }
 
-        Page<PostRespDTO> postDtos = pageMapingToDTO(postEntities);
+        Page<PostRespDTO> postDtos = pageMappingToDTO(postEntities);
         setURL(postDtos);
         return postDtos;
+    }
+
+    private void setReactions(PostRespDTO respDTO){
+        respDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(respDTO.getId()));
+        respDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(respDTO.getId()));
     }
 }
