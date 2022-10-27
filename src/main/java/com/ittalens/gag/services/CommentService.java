@@ -7,15 +7,18 @@ import com.ittalens.gag.model.exceptions.NotFoundException;
 import com.ittalens.gag.model.repository.CommentReactionsRepository;
 import com.ittalens.gag.model.repository.CommentRepository;
 import com.ittalens.gag.model.repository.UserRepository;
-import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
-import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,7 +63,7 @@ public class CommentService {
         UserCommentReactionEntity.CommentReactionKey key = new UserCommentReactionEntity.CommentReactionKey();
         key.setUserId(userId);
         key.setCommentId(commentId);
-        if(reactionsRepository.findById(key).isPresent() && reactionsRepository.findById(key).get().isStatus() == status){
+        if (reactionsRepository.findById(key).isPresent() && reactionsRepository.findById(key).get().isStatus() == status) {
             return deleteReaction(key);
         }
         UserCommentReactionEntity reaction = new UserCommentReactionEntity();
@@ -83,7 +86,7 @@ public class CommentService {
         MultipartFile file = childCommentDTO.getFile();
         CommentEntity comment = new CommentEntity();
         CommentEntity parentComment = findCommentById(cid);
-        if(file != null) {
+        if (file != null) {
             String internalFileName = fileStoreService.saveFile(file);
             comment.setResourcePath(internalFileName);
         }
@@ -117,20 +120,21 @@ public class CommentService {
     }
 
     public Page<CommentResponseDTO> getAllPostComments(long pid, String commentOrder, int offset, int pageSize) {
-        if(commentOrder.toLowerCase().equals("fresh")) {
+        if (commentOrder.toLowerCase().equals("fresh")) {
             Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of(offset, pageSize).withSort(Sort.by("createdAt")));
             return new PageImpl<>(commentsPage.stream()
                     .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
                     collect(Collectors.toList()));
         }
-        if(commentOrder.toLowerCase().equals("hot")){
-                Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of(offset, pageSize));
+        if (commentOrder.toLowerCase().equals("hot")) {
+            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of(offset, pageSize));
             return new PageImpl<>(commentsPage.stream().sorted((o1, o2) -> o2.getReactions().size() - o1.getReactions().size())
                     .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
                     collect(Collectors.toList()));
         }
         throw new BadRequestException("No such filter.");
     }
+
     public void deleteComment(long cid) {
         CommentEntity comment = findCommentById(cid);
         commentRepository.delete(comment);
@@ -141,10 +145,10 @@ public class CommentService {
         CommentReactionRespDTO responseDTO = new CommentReactionRespDTO();
         responseDTO.setId(reaction.getComment().getId());
         reactionsRepository.delete(reaction);
-        if(reaction.isStatus()) {
+        if (reaction.isStatus()) {
             responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndCommentId(reaction.getComment().getId()));
             responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndCommentId(reaction.getComment().getId()));
-        }else{
+        } else {
             responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndCommentId(reaction.getComment().getId()));
             responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndCommentId(reaction.getComment().getId()));
         }
@@ -152,11 +156,22 @@ public class CommentService {
 
     }
 
-    private CommentEntity findCommentById(long cid){
+    private CommentEntity findCommentById(long cid) {
         return commentRepository.findById(cid).orElseThrow(() -> new NotFoundException("No such comment."));
     }
 
-    private User findUserById(long uid){
+    private User findUserById(long uid) {
         return userRepository.findById(uid).orElseThrow(() -> new NotFoundException("No such user."));
+    }
+
+    private void setURL(Page<CommentResponseDTO> commentResponseDTOS) {
+        for (CommentResponseDTO comment : commentResponseDTOS) {
+            comment.setResourceURL("http://localhost:8080/comment/download/" + comment.getId());
+        }
+    }
+
+    public File takeFile(Long cid) {
+        String filePath = commentRepository.takeFilePath(cid);
+        return fileStoreService.getFile(filePath);
     }
 }

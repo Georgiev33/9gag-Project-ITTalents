@@ -1,7 +1,6 @@
 package com.ittalens.gag.model.repository;
 
 import com.ittalens.gag.model.entity.PostEntity;
-import com.ittalens.gag.model.entity.TagEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,7 +13,6 @@ import java.util.List;
 @Repository
 public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
-    List<PostEntity> findAll();
 
     Page<PostEntity> findByTitleContains(String word, PageRequest pageRequest);
 
@@ -26,9 +24,6 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     @Query("SELECT e.resourcePath FROM PostEntity e WHERE e.id = :pid")
     String takeFilePath(@Param("pid") Long pid);
-
-
-
 
 
 }
