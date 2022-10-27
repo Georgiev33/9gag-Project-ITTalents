@@ -7,6 +7,8 @@ import com.ittalens.gag.model.exceptions.NotFoundException;
 import com.ittalens.gag.model.repository.CommentReactionsRepository;
 import com.ittalens.gag.model.repository.CommentRepository;
 import com.ittalens.gag.model.repository.UserRepository;
+import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
+import com.ittalens.gag.model.dto.posts.PostRespDTO;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +23,16 @@ import java.util.stream.Collectors;
 public class CommentService {
     @Autowired
     private final FileStoreService fileStoreService;
+
     @Autowired
     private final CommentRepository commentRepository;
+
     @Autowired
     private final UserRepository userRepository;
+
     @Autowired
     private final CommentReactionsRepository reactionsRepository;
+
     @Autowired
     private final ModelMapper mapper;
 
@@ -81,7 +87,6 @@ public class CommentService {
             String internalFileName = fileStoreService.saveFile(file);
             comment.setResourcePath(internalFileName);
         }
-
         comment.setCommentEntity(parentComment);
         comment.setCreatedBy(uId);
         comment.setCreatedAt(LocalDateTime.now());
@@ -106,7 +111,7 @@ public class CommentService {
     }
 
     public Page<CommentResponseDTO> getAllCommentReplies(long cid, int offset, int pageSize) {
-        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityIdOOrderByCreatedAtDesc(cid, PageRequest.of(offset, pageSize));
+        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityIdOrderByCreatedAtDesc(cid, PageRequest.of(offset, pageSize));
         return new PageImpl<>(commentEntityPage.stream().map(commentEntity -> mapper
                 .map(commentEntity, CommentResponseDTO.class)).collect(Collectors.toList()));
     }
@@ -126,6 +131,11 @@ public class CommentService {
         }
         throw new BadRequestException("No such filter.");
     }
+    public void deleteComment(long cid) {
+        CommentEntity comment = findCommentById(cid);
+        commentRepository.delete(comment);
+    }
+
     private CommentReactionRespDTO deleteReaction(UserCommentReactionEntity.CommentReactionKey key) {
         UserCommentReactionEntity reaction = reactionsRepository.findById(key).orElseThrow(() -> new NotFoundException("Reaction not found."));
         CommentReactionRespDTO responseDTO = new CommentReactionRespDTO();
@@ -140,11 +150,6 @@ public class CommentService {
         }
         return responseDTO;
 
-    }
-
-    public void deleteComment(long cid) {
-        CommentEntity comment = findCommentById(cid);
-        commentRepository.delete(comment);
     }
 
     private CommentEntity findCommentById(long cid){

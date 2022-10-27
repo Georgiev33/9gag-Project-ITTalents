@@ -32,17 +32,17 @@ public class PostController {
         return ResponseEntity.ok("Post is uploaded!");
     }
 
-    @GetMapping("/all")
-    private List<PostRespDTO> getAllPosts() {
-        return postService.getAllPostsDto();
+    @GetMapping("/all/{offset}/{pageSize}")
+    private Page<PostRespDTO> getAllPosts(@PathVariable int offset, @PathVariable int pageSize) {
+        return postService.findAllSortedByReactionCount(offset,pageSize);
     }
 
-    @GetMapping("/date/{offset}/{pageSize}")
-    private Page<PostRespDTO> getAllPostsByDateAndTime(@PathVariable int offset, @PathVariable int pageSize) {
-        return postService.getAllByCreationDate(offset, pageSize);
+    @GetMapping("/date/{offset}/{pageSize}/{sortType}")
+    private Page<PostRespDTO> getAllPostsByDateAndTime(@PathVariable int offset, @PathVariable int pageSize, @PathVariable String sortType) {
+        return postService.getAllByCreationDate(offset, pageSize, sortType);
     }
 
-    @GetMapping("/{word}/")
+    @GetMapping("/{word}/{offset}/{pageSize}")
     private ResponseEntity<?> getAllPostsByWord(@PathVariable String word, @PathVariable int offset, @PathVariable int pageSize) {
         return ResponseEntity.ok(postService.findPostsByWord(word, offset, pageSize));
     }
@@ -72,13 +72,13 @@ public class PostController {
         return ResponseEntity.ok(postRespDTO);
     }
 
-    @GetMapping("/category/{categoryId}/{postOrder}/{offset}/{pageSize}")
-    private Page<PostRespDTO> getAllPostsCategory(@PathVariable Long categoryId, @PathVariable int offset, @PathVariable int pageSize, @PathVariable String postOrder) {
-        return postService.getAllPostsCategory(categoryId, offset, pageSize, postOrder);
+    @GetMapping("/category/{categoryId}/{offset}/{pageSize}/{sortType}")
+    private Page<PostRespDTO> getAllPostsCategory(@PathVariable Long categoryId, @PathVariable int offset, @PathVariable int pageSize, @PathVariable String sortType) {
+        return postService.getAllPostsCategory(categoryId, offset, pageSize, sortType);
     }
 
-    @GetMapping("/tag/{type}/{offset}/{pageSize}")
-    private Page<PostRespDTO> getAllPostsWithTags(@PathVariable String type, @PathVariable int offset, @PathVariable int pageSize) {
-        return postService.allPostsWithTag(type, offset, pageSize);
+    @GetMapping("/tag/{type}/{offset}/{pageSize}/{sortType}")
+    private Page<PostRespDTO> getAllPostsWithTags(@PathVariable String type, @PathVariable int offset, @PathVariable int pageSize, @PathVariable String sortType) {
+        return postService.allPostsWithTag(type, offset, pageSize, sortType);
     }
 }

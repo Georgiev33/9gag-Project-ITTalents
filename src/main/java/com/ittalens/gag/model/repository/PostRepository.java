@@ -20,13 +20,15 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
 
     Page<PostEntity> findByOrderByCreatedAtDesc(PageRequest pageRequest);
 
-    void deleteById(Long id);
+    Page<PostEntity> findByOrderByCreatedAtAsc(PageRequest pageRequest);
 
-    Page<PostEntity> findAllByCategoryId(Long categoryId, PageRequest pageRequest);
+    void deleteById(Long id);
 
     @Query("SELECT e.resourcePath FROM PostEntity e WHERE e.id = :pid")
     String takeFilePath(@Param("pid") Long pid);
 
-    Page<PostEntity> findAllByTagsContains(TagEntity tagEntity, PageRequest pageRequest);
+
+
+
 
 }

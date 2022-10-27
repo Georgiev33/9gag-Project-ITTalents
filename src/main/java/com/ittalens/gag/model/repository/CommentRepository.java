@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     Page<CommentEntity> findAllByPostIdAndCommentEntityIsNull(long postId, PageRequest request);
-    Page<CommentEntity> findAllByCommentEntityIdOOrderByCreatedAtDesc(long cid, PageRequest request);
+    Page<CommentEntity> findAllByCommentEntityIdOrderByCreatedAtDesc(long cid, PageRequest request);
 }
