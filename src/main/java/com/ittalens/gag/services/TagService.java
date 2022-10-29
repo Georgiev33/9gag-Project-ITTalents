@@ -14,8 +14,9 @@ public class TagService {
     public final TagRepository tagRepository;
 
     public void createdTag(TagCreatedDTO tagCreatedDto) {
+        String tagType = tagCreatedDto.getTagType().toUpperCase();
         TagEntity tagEntity = new TagEntity();
-        tagEntity.setTagType(tagCreatedDto.getTagType());
+        tagEntity.setTagType(tagType);
         tagRepository.save(tagEntity);
     }
 }

@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 public class FileStoreService {
 
-    private static final List<String> AVAILABLE_FILE_TYPE = Arrays.asList("jpeg", "png", "mp4", "m4v");
+    private static final List<String> AVAILABLE_FILE_TYPE = Arrays.asList("jpg", "png", "mp4", "m4v");
 
     public String saveFile(MultipartFile file) {
         String ext = FilenameUtils.getExtension(file.getOriginalFilename());

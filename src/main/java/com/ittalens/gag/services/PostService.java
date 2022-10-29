@@ -60,6 +60,11 @@ public class PostService {
         MultipartFile originalFile = postDto.getFile();
         String internalFileName = fileStoreService.saveFile(originalFile);
         PostEntity postEntity = new PostEntity();
+
+        if (postDto.getTitle() == null || postDto.getCategoryId() == null) {
+            throw new BadRequestException("Some fields are missing!");
+        }
+
         postEntity.setTitle(postDto.getTitle());
         postEntity.setResourcePath(internalFileName);
         postEntity.setCreatedAt(LocalDateTime.now());
@@ -72,11 +77,11 @@ public class PostService {
 
     public Page<PostRespDTO> getAllByCreationDate(int offset, int pageSize, String sortType) {
         Page<PostEntity> postEntities = null;
-        if(sortType.toLowerCase().equals("desc")) {
-             postEntities = postRepository.findByOrderByCreatedAtDesc(PageRequest.of(offset, pageSize));
-        }else if(sortType.toLowerCase().equals("asc")){
-            postEntities = postRepository.findByOrderByCreatedAtAsc(PageRequest.of(offset,pageSize));
-        }else{
+        if (sortType.toLowerCase().equals("desc")) {
+            postEntities = postRepository.findByOrderByCreatedAtDesc(PageRequest.of((offset - 1), pageSize));
+        } else if (sortType.toLowerCase().equals("asc")) {
+            postEntities = postRepository.findByOrderByCreatedAtAsc(PageRequest.of((offset - 1), pageSize));
+        } else {
             throw new BadRequestException("No such filtering option.");
         }
         Page<PostRespDTO> postDtos = pageMappingToDTO(postEntities);
@@ -86,7 +91,7 @@ public class PostService {
     }
 
     public Page<PostRespDTO> findPostsByWord(String word, int offset, int pageSize) {
-        Page<PostEntity> postEntities = postRepository.findByTitleContains(word, PageRequest.of(offset, pageSize));
+        Page<PostEntity> postEntities = postRepository.findByTitleContains(word, PageRequest.of((offset - 1), pageSize));
         if (postEntities.isEmpty()) {
             throw new NotFoundException("Don't have a post with this word");
         }
@@ -143,28 +148,28 @@ public class PostService {
 
     public Page<PostRespDTO> getAllPostsCategory(Long categoryId, int offset, int pageSize, String sortType) {
         List<PostRespDTO> respDTOS = null;
-       if(sortType.toLowerCase().equals("hot")){
-            respDTOS = dao.getAllRecentPostsByCategorySortedByReactionCount(offset,pageSize,categoryId);
-       }else if(sortType.toLowerCase().equals("fresh")){
-            respDTOS = dao.getAllRecentPostsByCategoryId(offset,pageSize,categoryId);
-       }else{
-           throw new BadRequestException("No such filtering option");
-       }
-       return new PageImpl<>(respDTOS);
+        if (sortType.toLowerCase().equals("hot")) {
+            respDTOS = dao.getAllRecentPostsByCategorySortedByReactionCount((offset - 1), pageSize, categoryId);
+        } else if (sortType.toLowerCase().equals("fresh")) {
+            respDTOS = dao.getAllRecentPostsByCategoryId(offset, pageSize, categoryId);
+        } else {
+            throw new BadRequestException("No such filtering option");
+        }
+        return new PageImpl<>(respDTOS);
     }
 
-    public Page<PostRespDTO> findAllSortedByReactionCount(int offset, int pageSize){
-        return new PageImpl<>(dao.getAllRecentPostsSortedByReactionCount(offset, pageSize));
+    public Page<PostRespDTO> findAllSortedByReactionCount(int offset, int pageSize) {
+        return new PageImpl<>(dao.getAllRecentPostsSortedByReactionCount((offset - 1), pageSize));
     }
 
-    public Page<PostRespDTO> allPostsWithTag(String tag, int offset, int pageSize, String sortType){
+    public Page<PostRespDTO> allPostsWithTag(String tag, int offset, int pageSize, String sortType) {
         List<PostRespDTO> respDTOS = null;
         TagEntity tagEntity = tagRepository.findByTagType(tag);
-        if(sortType.toLowerCase().equals("hot")){
-            respDTOS = dao.getAllRecentPostsByTagIdSortedByReactionCount(offset, pageSize, tagEntity.getId());
-        }else if(sortType.toLowerCase().equals("fresh")){
-            respDTOS = dao.getAlLRecentPostsByTagId(offset, pageSize, tagEntity.getId());
-        }else{
+        if (sortType.toLowerCase().equals("hot")) {
+            respDTOS = dao.getAllRecentPostsByTagIdSortedByReactionCount((offset - 1), pageSize, tagEntity.getId());
+        } else if (sortType.toLowerCase().equals("fresh")) {
+            respDTOS = dao.getAlLRecentPostsByTagId((offset - 1), pageSize, tagEntity.getId());
+        } else {
             throw new BadRequestException("No such filtering option.");
         }
         return new PageImpl<>(respDTOS);
@@ -174,14 +179,15 @@ public class PostService {
         List<TagEntity> tagEntityList = new ArrayList<>();
 
         for (String type : tags) {
+            String typeTag = type.toUpperCase();
             TagEntity tagEntity = new TagEntity();
-            tagEntity = tagRepository.findByTagType(type);
+            tagEntity = tagRepository.findByTagType(typeTag);
 
             if (tagEntity == null) {
                 TagCreatedDTO tagCreatedDto = new TagCreatedDTO();
-                tagCreatedDto.setTagType(type);
+                tagCreatedDto.setTagType(typeTag);
                 tagService.createdTag(tagCreatedDto);
-                tagEntity = tagRepository.findByTagType(type);
+                tagEntity = tagRepository.findByTagType(typeTag);
             }
             tagEntityList.add(tagEntity);
         }
@@ -194,13 +200,15 @@ public class PostService {
         PostReactionResponseDTO responseDTO = new PostReactionResponseDTO();
         responseDTO.setId(reaction.getPost().getId());
         reactionsRepository.delete(reaction);
-        if (reaction.isStatus()) {
+
+        if (reaction.isStatus()) {//TODO
             responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(reaction.getPost().getId()));
             responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(reaction.getPost().getId()));
         } else {
             responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(reaction.getPost().getId()));
             responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(reaction.getPost().getId()));
         }
+
         return responseDTO;
     }
 
@@ -217,7 +225,7 @@ public class PostService {
         }
     }
 
-    private void setReactions(PostRespDTO respDTO){
+    private void setReactions(PostRespDTO respDTO) {
         respDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(respDTO.getId()));
         respDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(respDTO.getId()));
     }
