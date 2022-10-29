@@ -151,7 +151,7 @@ public class PostService {
         if (sortType.toLowerCase().equals("hot")) {
             respDTOS = dao.getAllRecentPostsByCategorySortedByReactionCount((offset - 1), pageSize, categoryId);
         } else if (sortType.toLowerCase().equals("fresh")) {
-            respDTOS = dao.getAllRecentPostsByCategoryId(offset, pageSize, categoryId);
+            respDTOS = dao.getAllRecentPostsByCategoryId((offset - 1), pageSize, categoryId);
         } else {
             throw new BadRequestException("No such filtering option");
         }
@@ -165,6 +165,9 @@ public class PostService {
     public Page<PostRespDTO> allPostsWithTag(String tag, int offset, int pageSize, String sortType) {
         List<PostRespDTO> respDTOS = null;
         TagEntity tagEntity = tagRepository.findByTagType(tag);
+        if (tagEntity == null){
+            throw new NotFoundException("No such tag!");
+        }
         if (sortType.toLowerCase().equals("hot")) {
             respDTOS = dao.getAllRecentPostsByTagIdSortedByReactionCount((offset - 1), pageSize, tagEntity.getId());
         } else if (sortType.toLowerCase().equals("fresh")) {
@@ -200,14 +203,8 @@ public class PostService {
         PostReactionResponseDTO responseDTO = new PostReactionResponseDTO();
         responseDTO.setId(reaction.getPost().getId());
         reactionsRepository.delete(reaction);
-
-        if (reaction.isStatus()) {//TODO
-            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(reaction.getPost().getId()));
-            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(reaction.getPost().getId()));
-        } else {
-            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(reaction.getPost().getId()));
-            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(reaction.getPost().getId()));
-        }
+        responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(reaction.getPost().getId()));
+        responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(reaction.getPost().getId()));
 
         return responseDTO;
     }

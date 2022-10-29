@@ -88,10 +88,10 @@ public class PostController {
     }
 
     @GetMapping("/tag")
-    private Page<PostRespDTO> getAllPostsWithTags(@RequestParam(name = "tag_type", defaultValue = "") String type,
+    private Page<PostRespDTO> getAllPostsWithTags(@RequestParam(name = "tag_type") String type,
                                                   @RequestParam(name = "page", defaultValue = "1") int offset,
                                                   @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
                                                   @RequestParam(name = "sorted_type", defaultValue = "fresh") String sortType) {
-        return postService.allPostsWithTag(type, offset, pageSize, sortType);
+        return postService.allPostsWithTag(type.toUpperCase(), offset, pageSize, sortType);
     }
 }

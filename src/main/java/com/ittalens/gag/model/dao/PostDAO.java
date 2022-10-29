@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -43,8 +44,8 @@ public class PostDAO {
             "COUNT(CASE WHEN upr.status = 1 THEN upr.status END) AS likes,\n" +
             "COUNT(CASE WHEN upr.status = 0 THEN upr.status END) AS dislikes\n" +
             "FROM posts p \n" +
-            "LEFT JOIN users_posts_reactions upr ON (p.id = upr.post_id)\n" +
-            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY)  AND p.category_id = ?\n" +
+            "LEFT JOIN users_posts_reactions upr ON (p.id = upr.post_id )\n" +
+            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) AND p.category_id = ? \n" +
             "ORDER BY p.created_at DESC LIMIT ?,?";
 
     private static final String SORTED_BY_TAG_AND_REACT =
@@ -100,7 +101,7 @@ public class PostDAO {
                 rs.getLong("id"),
                 rs.getString("title"),
                 "http://localhost:8080/posts/download/" + rs.getLong("id"),
-                rs.getDate("created_at").toLocalDate().atStartOfDay(),
+                LocalDateTime.of(rs.getDate("created_at").toLocalDate(), rs.getTime("created_at").toLocalTime()),
                 rs.getLong("created_by"),
                 rs.getLong("category_id"),
                 rs.getInt("likes"),
@@ -121,7 +122,7 @@ public class PostDAO {
                 rs.getLong("id"),
                 rs.getString("title"),
                 "http://localhost:8080/posts/download/" + rs.getLong("id"),
-                rs.getDate("created_at").toLocalDate().atStartOfDay(),
+                LocalDateTime.of(rs.getDate("created_at").toLocalDate(), rs.getTime("created_at").toLocalTime()),
                 rs.getLong("created_by"),
                 rs.getLong("category_id"),
                 rs.getInt("likes"),

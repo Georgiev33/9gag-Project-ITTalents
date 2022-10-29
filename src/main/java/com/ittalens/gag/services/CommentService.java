@@ -153,13 +153,8 @@ public class CommentService {
         CommentReactionRespDTO responseDTO = new CommentReactionRespDTO();
         responseDTO.setId(reaction.getComment().getId());
         reactionsRepository.delete(reaction);
-        if (reaction.isStatus()) {
-            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndCommentId(reaction.getComment().getId()));
-            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndCommentId(reaction.getComment().getId()));
-        } else {
-            responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndCommentId(reaction.getComment().getId()));
-            responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndCommentId(reaction.getComment().getId()));
-        }
+        responseDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndCommentId(reaction.getComment().getId()));
+        responseDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndCommentId(reaction.getComment().getId()));
         return responseDTO;
 
     }
