@@ -125,7 +125,7 @@ public class CommentService {
 
     public Page<CommentResponseDTO> getAllPostComments(long pid, String commentOrder, int offset, int pageSize) {
         if (commentOrder.toLowerCase().equals("fresh")) {
-            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of(offset, pageSize).withSort(Sort.by("createdAt")));
+            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of((offset-1), pageSize).withSort(Sort.by("createdAt")));
             return new PageImpl<>(commentsPage.stream()
                     .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
                     collect(Collectors.toList()));

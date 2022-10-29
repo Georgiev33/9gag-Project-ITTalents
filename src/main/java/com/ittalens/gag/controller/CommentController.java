@@ -24,9 +24,11 @@ public class CommentController {
     @Autowired
     private final CommentService commentService;
 
-    @GetMapping("/post/{pid}/{commentOrder}/{offset}/{pageSize}")
-    private ResponseEntity<?> getAllPostComments(@PathVariable long pid, @PathVariable String commentOrder, @PathVariable int offset, @PathVariable int pageSize) {
-        return ResponseEntity.ok(commentService.getAllPostComments(pid, commentOrder, offset, pageSize));
+    @GetMapping("/post/{pid}/comments")
+    private ResponseEntity<?> getAllPostComments(@PathVariable long pid,@RequestParam(name = "page", defaultValue = "1") int page,
+                                                                        @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
+                                                                        @RequestParam(name = "type", required = true) String sortType) {
+        return ResponseEntity.ok(commentService.getAllPostComments(pid, sortType, page, pageSize));
     }
 
     @GetMapping("/{cid}")

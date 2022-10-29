@@ -19,8 +19,6 @@ import java.util.List;
 public class PostDAO {
     @Autowired
     private JdbcTemplate jdbcTemplate;
-    @Autowired
-    private PostReactionsRepository reactionsRepository;
 
     private static final String SORTED_BY_REACT =
             "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id,\n" +
