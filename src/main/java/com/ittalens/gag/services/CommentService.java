@@ -9,7 +9,6 @@ import com.ittalens.gag.model.repository.CommentReactionsRepository;
 import com.ittalens.gag.model.repository.CommentRepository;
 import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -18,8 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,6 +48,10 @@ public class CommentService {
             MultipartFile originalFile = parentCommentDto.getFile();
             String internalFileName = fileStoreService.saveFile(originalFile);
             commentEntity.setResourcePath(internalFileName);
+        }
+
+        if (parentCommentDto.getText() == null){
+            throw new BadRequestException("Now text in comment!");
         }
 
         commentEntity.setText(parentCommentDto.getText());
@@ -90,10 +91,16 @@ public class CommentService {
         MultipartFile file = childCommentDTO.getFile();
         CommentEntity comment = new CommentEntity();
         CommentEntity parentComment = findCommentById(cid);
+
         if (file != null) {
             String internalFileName = fileStoreService.saveFile(file);
             comment.setResourcePath(internalFileName);
         }
+
+        if (childCommentDTO.getText() == null){
+            throw new BadRequestException("Now text in comment!");
+        }
+
         comment.setCommentEntity(parentComment);
         comment.setCreatedBy(uId);
         comment.setCreatedAt(LocalDateTime.now());

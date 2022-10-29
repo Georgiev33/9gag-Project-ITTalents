@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -32,35 +31,43 @@ public class PostController {
         return ResponseEntity.ok("Post is uploaded!");
     }
 
-    @GetMapping("/all/{offset}/{pageSize}")
-    private Page<PostRespDTO> getAllPosts(@PathVariable int offset, @PathVariable int pageSize) {
-        return postService.findAllSortedByReactionCount(offset,pageSize);
+    @GetMapping("/all")
+    private Page<PostRespDTO> getAllPosts(@RequestParam(name = "page", defaultValue = "1") int offset,
+                                          @RequestParam(name = "per_page", defaultValue = "10") int pageSize) {
+        return postService.findAllSortedByReactionCount(offset, pageSize);
     }
 
-    @GetMapping("/date/{offset}/{pageSize}/{sortType}")
-    private Page<PostRespDTO> getAllPostsByDateAndTime(@PathVariable int offset, @PathVariable int pageSize, @PathVariable String sortType) {
+    @GetMapping("/date")
+    private Page<PostRespDTO> getAllPostsByDateAndTime(@RequestParam(name = "page", defaultValue = "1") int offset,
+                                                       @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
+                                                       @RequestParam(name = "sorted_type", defaultValue = "fresh") String sortType) {
         return postService.getAllByCreationDate(offset, pageSize, sortType);
     }
 
-    @GetMapping("/{word}/{offset}/{pageSize}")
-    private ResponseEntity<?> getAllPostsByWord(@PathVariable String word, @PathVariable int offset, @PathVariable int pageSize) {
+    @GetMapping("/word")
+    private ResponseEntity<?> getAllPostsByWord(@RequestParam(name = "word", defaultValue = "") String word,
+                                                @RequestParam(name = "page", defaultValue = "1") int offset,
+                                                @RequestParam(name = "per_page", defaultValue = "10") int pageSize) {
         return ResponseEntity.ok(postService.findPostsByWord(word, offset, pageSize));
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     private ResponseEntity<?> deletedPost(@PathVariable String id) {
         postService.deletedPostById(Long.parseLong(id));
         return ResponseEntity.ok("Post was deleted!");
     }
 
     @PutMapping("{pid}/react")
-    private ResponseEntity<PostReactionResponseDTO> react(@PathVariable long pid, @RequestBody PostReactionDTO reactionDTO, HttpSession session) {
+    private ResponseEntity<PostReactionResponseDTO> react(@PathVariable long pid,
+                                                          @RequestBody PostReactionDTO reactionDTO,
+                                                          HttpSession session) {
         return ResponseEntity.ok(postService.react(pid, Long.parseLong(session.getAttribute("USER_ID").toString()), reactionDTO.isStatus()));
     }
 
     @GetMapping("/download/{pid}")
     @SneakyThrows
-    private void downloadPostById(@PathVariable String pid, HttpServletResponse response) {
+    private void downloadPostById(@PathVariable String pid,
+                                  HttpServletResponse response) {
         File file = postService.takeFile(pid);
         response.setContentType(Files.probeContentType(file.toPath()));
         Files.copy(file.toPath(), response.getOutputStream());
@@ -72,13 +79,19 @@ public class PostController {
         return ResponseEntity.ok(postRespDTO);
     }
 
-    @GetMapping("/category/{categoryId}/{offset}/{pageSize}/{sortType}")
-    private Page<PostRespDTO> getAllPostsCategory(@PathVariable Long categoryId, @PathVariable int offset, @PathVariable int pageSize, @PathVariable String sortType) {
+    @GetMapping("/category")
+    private Page<PostRespDTO> getAllPostsCategory(@RequestParam(name = "category_id", defaultValue = "1") Long categoryId,
+                                                  @RequestParam(name = "page", defaultValue = "1") int offset,
+                                                  @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
+                                                  @RequestParam(name = "sorted_type", defaultValue = "fresh") String sortType) {
         return postService.getAllPostsCategory(categoryId, offset, pageSize, sortType);
     }
 
-    @GetMapping("/tag/{type}/{offset}/{pageSize}/{sortType}")
-    private Page<PostRespDTO> getAllPostsWithTags(@PathVariable String type, @PathVariable int offset, @PathVariable int pageSize, @PathVariable String sortType) {
+    @GetMapping("/tag")
+    private Page<PostRespDTO> getAllPostsWithTags(@RequestParam(name = "tag_type", defaultValue = "") String type,
+                                                  @RequestParam(name = "page", defaultValue = "1") int offset,
+                                                  @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
+                                                  @RequestParam(name = "sorted_type", defaultValue = "fresh") String sortType) {
         return postService.allPostsWithTag(type, offset, pageSize, sortType);
     }
 }
