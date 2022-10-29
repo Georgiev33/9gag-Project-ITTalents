@@ -18,38 +18,55 @@ import java.util.List;
 @NoArgsConstructor
 public class PostDAO {
     @Autowired
-    JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
     @Autowired
-    PostReactionsRepository reactionsRepository;
+    private PostReactionsRepository reactionsRepository;
 
-    private static final String SORTED_BY_REACT = "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id," +
-            " COUNT(r.post_id) AS number_of_reactions\n" +
+    private static final String SORTED_BY_REACT =
+            "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id,\n" +
+            "COUNT(r.post_id) AS number_of_reactions,\n" +
+            "COUNT(CASE WHEN r.status = 1 THEN r.status END) AS likes,\n" +
+            "COUNT(CASE WHEN r.status = 0 THEN r.status END) AS dislikes\n" +
             "FROM posts p LEFT JOIN users_posts_reactions r ON (p.id = r.post_id)\n" +
-            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) " +
+            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY)\n" +
             "ORDER BY number_of_reactions DESC LIMIT ?,?";
 
-    private static final String SORTED_BY_CATEGORY_AND_REACT = "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id," +
-            " COUNT(r.post_id) AS number_of_reactions\n" +
+    private static final String SORTED_BY_CATEGORY_AND_REACT =
+            "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id,\n" +
+            "COUNT(r.post_id) AS number_of_reactions,\n" +
+            "COUNT(CASE WHEN r.status = 1 THEN r.status END) AS likes,\n" +
+            "COUNT(CASE WHEN r.status = 0 THEN r.status END) AS dislikes\n" +
             "FROM posts p LEFT JOIN users_posts_reactions r ON (p.id = r.post_id)\n" +
-            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) AND p.category_id = ? " +
+            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) AND p.category_id = ?\n" +
             "ORDER BY number_of_reactions DESC LIMIT ?,?";
 
-    private static final String SORTED_BY_CATEGORY_AND_DATE = "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id\n" +
-            "FROM posts p\n" +
-            "WHERE p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) AND category_id = ? \n" +
+    private static final String SORTED_BY_CATEGORY_AND_DATE =
+            "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id, \n" +
+            "COUNT(CASE WHEN upr.status = 1 THEN upr.status END) AS likes,\n" +
+            "COUNT(CASE WHEN upr.status = 0 THEN upr.status END) AS dislikes\n" +
+            "FROM posts p \n" +
+            "LEFT JOIN users_posts_reactions upr ON (p.id = upr.post_id)\n" +
+            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY)  AND p.category_id = ?\n" +
             "ORDER BY p.created_at DESC LIMIT ?,?";
 
-    private static final String SORTED_BY_TAG_AND_REACT = "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id, " +
+    private static final String SORTED_BY_TAG_AND_REACT =
+            "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id, \n" +
+            "COUNT(CASE WHEN r.status = 1 THEN r.status END) AS likes, \n" +
+            "COUNT(CASE WHEN r.status = 0 THEN r.status END) AS dislikes,\n" +
             "COUNT(r.post_id) AS number_of_reactions, pwt.tag_id AS tag\n" +
             "FROM posts p LEFT JOIN users_posts_reactions r ON (p.id = r.post_id)\n" +
-            "JOIN posts_with_tags pwt ON (p.id = pwt.post_id)\n" +
-            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) AND pwt.tag_id = ? " +
+            "JOIN posts_with_tags pwt ON (p.id = pwt.post_id AND pwt.tag_id = ?)\n" +
+            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY)\n" +
             "ORDER BY number_of_reactions DESC LIMIT ?,?";
 
-    private static final String SORTED_BY_TAG_AND_DATE = "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id, pwt.tag_id AS tag\n" +
+    private static final String SORTED_BY_TAG_AND_DATE =
+            "SELECT p.id, p.title, p.resource_path, p.created_at, p.created_by, p.category_id, pwt.tag_id AS tag,\n" +
+            "COUNT(CASE WHEN upr.status = 1 THEN upr.status END) AS likes,\n" +
+            "COUNT(CASE WHEN upr.status = 0 THEN upr.status END) AS dislikes\n" +
             "FROM posts p\n" +
-            "JOIN posts_with_tags pwt ON (p.id = pwt.post_id)\n" +
-            "WHERE p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) AND pwt.tag_id = ? " +
+            "JOIN posts_with_tags pwt ON (p.id = pwt.post_id AND pwt.tag_id = ?)\n" +
+            "LEFT JOIN users_posts_reactions upr ON(p.id = upr.post_id)\n" +
+            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY)\n" +
             "ORDER BY created_at DESC LIMIT ?,?";
 
     public List<PostRespDTO> getAllRecentPostsSortedByReactionCount(int offset, int pageSize) {
@@ -88,8 +105,8 @@ public class PostDAO {
                 rs.getDate("created_at").toLocalDate().atStartOfDay(),
                 rs.getLong("created_by"),
                 rs.getLong("category_id"),
-                reactionsRepository.countAllByStatusIsTrueAndPostId(rs.getLong("id")),
-                reactionsRepository.countAllByStatusIsFalseAndPostId(rs.getLong("id"))));
+                rs.getInt("likes"),
+                rs.getInt("dislikes")));
         return respDTOS;
     }
 
@@ -109,8 +126,8 @@ public class PostDAO {
                 rs.getDate("created_at").toLocalDate().atStartOfDay(),
                 rs.getLong("created_by"),
                 rs.getLong("category_id"),
-                reactionsRepository.countAllByStatusIsTrueAndPostId(rs.getLong("id")),
-                reactionsRepository.countAllByStatusIsFalseAndPostId(rs.getLong("id"))));
+                rs.getInt("likes"),
+                rs.getInt("dislikes")));
         return respDTOS;
 
     }

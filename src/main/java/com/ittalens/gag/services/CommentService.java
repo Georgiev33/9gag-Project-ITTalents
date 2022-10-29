@@ -1,5 +1,6 @@
 package com.ittalens.gag.services;
 
+import com.ittalens.gag.model.dao.CommentDAO;
 import com.ittalens.gag.model.dto.comments.*;
 import com.ittalens.gag.model.entity.*;
 import com.ittalens.gag.model.exceptions.BadRequestException;
@@ -38,6 +39,9 @@ public class CommentService {
 
     @Autowired
     private final ModelMapper mapper;
+
+    @Autowired
+    private CommentDAO dao;
 
 
     public void createdComment(ParentCommentDTO parentCommentDto, Long userId) {
@@ -127,10 +131,7 @@ public class CommentService {
                     collect(Collectors.toList()));
         }
         if (commentOrder.toLowerCase().equals("hot")) {
-            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of(offset, pageSize));
-            return new PageImpl<>(commentsPage.stream().sorted((o1, o2) -> o2.getReactions().size() - o1.getReactions().size())
-                    .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
-                    collect(Collectors.toList()));
+            return new PageImpl<>(dao.getAllCommentsForPostSortedByReactionCount(offset,pageSize,pid));
         }
         throw new BadRequestException("No such filter.");
     }
