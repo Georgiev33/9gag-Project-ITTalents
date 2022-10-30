@@ -65,61 +65,61 @@ public class UserService {
     }
 
     public void delete(long id) {
-            User u = findById(id);
-            if (!u.isActive()) {
-                throw new BadRequestException("User is already deleted.");
-            }
-            u.setUserName(RandomString.make(99));
-            u.setEmail(RandomString.make(99));
-            u.setFirstName(RandomString.make(99));
-            u.setLastName(RandomString.make(99));
-            u.setPassword(RandomString.make(99));
-            u.setActive(false);
-            repository.save(u);
-            return;
+        User u = findById(id);
+        if (!u.isActive()) {
+            throw new BadRequestException("User is already deleted.");
+        }
+        u.setUserName(RandomString.make(99));
+        u.setEmail(RandomString.make(99));
+        u.setFirstName(RandomString.make(99));
+        u.setLastName(RandomString.make(99));
+        u.setPassword(RandomString.make(99));
+        u.setActive(false);
+        repository.save(u);
+        return;
     }
 
     public UserWithoutPasswordDTO edit(long userId, EditUserDTO editUserDTO) {
-            User u = findById(userId);
-            if (editUserDTO.getUserName() != null && !editUserDTO.getUserName().equals(u.getUserName())) {
-                if (!isUserNameFree(editUserDTO.getUserName())) {
-                    throw new BadRequestException("Unique usernames only!");
-                }
-                u.setUserName(editUserDTO.getUserName());
+        User u = findById(userId);
+        if (editUserDTO.getUserName() != null && !editUserDTO.getUserName().equals(u.getUserName())) {
+            if (!isUserNameFree(editUserDTO.getUserName())) {
+                throw new BadRequestException("Unique usernames only!");
             }
-            if (editUserDTO.getFirstName() != null && !editUserDTO.getFirstName().equals(u.getFirstName())) {
-                u.setFirstName(editUserDTO.getFirstName());
+            u.setUserName(editUserDTO.getUserName());
+        }
+        if (editUserDTO.getFirstName() != null && !editUserDTO.getFirstName().equals(u.getFirstName())) {
+            u.setFirstName(editUserDTO.getFirstName());
+        }
+        if (editUserDTO.getLastName() != null && !editUserDTO.getLastName().equals(u.getLastName())) {
+            u.setLastName(editUserDTO.getLastName());
+        }
+        if (editUserDTO.getAge() != u.getAge() && editUserDTO.getAge() != 0) {
+            if (editUserDTO.getAge() < u.getAge() || editUserDTO.getAge() > 110) {
+                throw new BadRequestException("Invalid age edit.");
             }
-            if (editUserDTO.getLastName() != null && !editUserDTO.getLastName().equals(u.getLastName())) {
-                u.setLastName(editUserDTO.getLastName());
+            u.setAge(editUserDTO.getAge());
+        }
+        if (editUserDTO.getEmail() != null && !editUserDTO.getEmail().equals(u.getEmail())) {
+            if (!validateEmail(editUserDTO.getEmail())) {
+                throw new BadRequestException("Invalid email edit.");
             }
-            if (editUserDTO.getAge() != u.getAge() && editUserDTO.getAge() != 0) {
-                if (editUserDTO.getAge() < u.getAge() || editUserDTO.getAge() > 110) {
-                    throw new BadRequestException("Invalid age edit.");
-                }
-                u.setAge(editUserDTO.getAge());
-            }
-            if (editUserDTO.getEmail() != null && !editUserDTO.getEmail().equals(u.getEmail())) {
-                if (!validateEmail(editUserDTO.getEmail())) {
-                    throw new BadRequestException("Invalid email edit.");
-                }
-                u.setEmail(editUserDTO.getEmail());
-            }
-            repository.save(u);
-            return mapper.map(u, UserWithoutPasswordDTO.class);
+            u.setEmail(editUserDTO.getEmail());
+        }
+        repository.save(u);
+        return mapper.map(u, UserWithoutPasswordDTO.class);
     }
 
     public UserWithoutPasswordDTO editPass(ChangePasswordDTO userDTO, long id) {
-            User u = findById(id);
-            if (!bCryptPasswordEncoder.matches(userDTO.getCurrentPassword(), u.getPassword())) {
-                throw new BadRequestException("Invalid credentials.");
-            }
-            if (!userDTO.getNewPassword().equals(userDTO.getConfirmNewPassword())) {
-                throw new BadRequestException("Invalid credentials.");
-            }
-            u.setPassword(bCryptPasswordEncoder.encode(userDTO.getNewPassword()));
-            repository.save(u);
-            return mapper.map(u, UserWithoutPasswordDTO.class);
+        User u = findById(id);
+        if (!bCryptPasswordEncoder.matches(userDTO.getCurrentPassword(), u.getPassword())) {
+            throw new BadRequestException("Invalid credentials.");
+        }
+        if (!userDTO.getNewPassword().equals(userDTO.getConfirmNewPassword())) {
+            throw new BadRequestException("Invalid credentials.");
+        }
+        u.setPassword(bCryptPasswordEncoder.encode(userDTO.getNewPassword()));
+        repository.save(u);
+        return mapper.map(u, UserWithoutPasswordDTO.class);
     }
 
     public UserWithoutPasswordDTO login(UserLoginDTO userDTO) {
@@ -135,11 +135,9 @@ public class UserService {
     }
 
     public List<UserWithoutPasswordDTO> getAllUsers() {
-        List<UserWithoutPasswordDTO> users =
-                repository.
-                        findAll().
-                        stream().map(user -> mapper.map(user, UserWithoutPasswordDTO.class)).collect(Collectors.toList());
-        return users;
+        return repository.findAll().
+                stream().map(user -> mapper.map(user, UserWithoutPasswordDTO.class)).
+                collect(Collectors.toList());
     }
 
     private boolean validateEmail(String email) {
@@ -162,7 +160,7 @@ public class UserService {
         repository.save(user);
     }
 
-    private User findById(long uid){
+    private User findById(long uid) {
         return repository.findById(uid).orElseThrow(() -> new NotFoundException("User not found."));
     }
 }

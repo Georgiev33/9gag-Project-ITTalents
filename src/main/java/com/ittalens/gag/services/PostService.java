@@ -70,7 +70,7 @@ public class PostService {
         postEntity.setCreatedAt(LocalDateTime.now());
         postEntity.setCreatedBy(userId);
         postEntity.setCategoryId(postDto.getCategoryId());
-        postEntity.getTags().addAll(setTagsFromPostDto(postDto.getTagTypes()));
+        postEntity.getTags().addAll(setTagsFromPostDto(postDto.getTags()));
         postRepository.save(postEntity);
 
     }
@@ -165,7 +165,7 @@ public class PostService {
     public Page<PostRespDTO> allPostsWithTag(String tag, int offset, int pageSize, String sortType) {
         List<PostRespDTO> respDTOS = null;
         TagEntity tagEntity = tagRepository.findByTagType(tag);
-        if (tagEntity == null){
+        if (tagEntity == null) {
             throw new NotFoundException("No such tag!");
         }
         if (sortType.toLowerCase().equals("hot")) {

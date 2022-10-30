@@ -1,7 +1,6 @@
 package com.ittalens.gag.model.dao;
 
 import com.ittalens.gag.model.dto.posts.PostRespDTO;
-import com.ittalens.gag.model.repository.PostReactionsRepository;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

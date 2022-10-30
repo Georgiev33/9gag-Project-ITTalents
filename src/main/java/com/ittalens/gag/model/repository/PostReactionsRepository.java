@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PostReactionsRepository extends JpaRepository<UserPostReaction, UserPostReaction.PostReactionKey> {
-     int countAllByStatusIsTrueAndPostId(long pId);
-     int countAllByStatusIsFalseAndPostId(long pId);
+    int countAllByStatusIsTrueAndPostId(long pId);
+
+    int countAllByStatusIsFalseAndPostId(long pId);
 }

@@ -25,11 +25,11 @@ public class SecurityFilter implements Filter {
             return;
         }
 
-        if (request.getSession().getAttribute("LOGGED") == null){
+        if (request.getSession().getAttribute("LOGGED") == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        chain.doFilter(servletRequest,servletResponse);
+        chain.doFilter(servletRequest, servletResponse);
     }
 }

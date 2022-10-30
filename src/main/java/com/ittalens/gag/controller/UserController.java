@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession s){
+    public ResponseEntity<?> logout(HttpSession s) {
         s.invalidate();
         return ResponseEntity.ok().build();
     }
@@ -73,7 +73,7 @@ public class UserController {
     }
 
     @PutMapping("/{code}")
-    public ResponseEntity<?> verificatinCode(@PathVariable String code){
+    public ResponseEntity<?> verificatinCode(@PathVariable String code) {
         userService.comparingVerificationCode(code);
         return ResponseEntity.ok("Еmail has been verified");
     }

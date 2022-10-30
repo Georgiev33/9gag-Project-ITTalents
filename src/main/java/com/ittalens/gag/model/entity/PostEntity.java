@@ -30,7 +30,7 @@ public class PostEntity {
     @ManyToMany
     @JoinTable(name = "posts_with_tags",
             joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn (name = "tag_id"))
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private List<TagEntity> tags = new ArrayList();
     @OneToMany(mappedBy = "post")
     private List<UserPostReaction> reactions;

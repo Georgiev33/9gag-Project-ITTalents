@@ -40,7 +40,7 @@ public class CommentController {
     public ResponseEntity<?> createdParentComment(@ModelAttribute ParentCommentDTO parentCommentDto, HttpSession session) {
         Long userId = Long.parseLong(session.getAttribute("USER_ID").toString());
         commentService.createdComment(parentCommentDto, userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Comment was uploaded!");
     }
 
     @PostMapping("/{cid}")

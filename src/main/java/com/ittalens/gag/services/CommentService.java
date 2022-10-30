@@ -50,7 +50,7 @@ public class CommentService {
             commentEntity.setResourcePath(internalFileName);
         }
 
-        if (parentCommentDto.getText() == null){
+        if (parentCommentDto.getText() == null) {
             throw new BadRequestException("Now text in comment!");
         }
 
@@ -97,7 +97,7 @@ public class CommentService {
             comment.setResourcePath(internalFileName);
         }
 
-        if (childCommentDTO.getText() == null){
+        if (childCommentDTO.getText() == null) {
             throw new BadRequestException("Now text in comment!");
         }
 
@@ -132,13 +132,13 @@ public class CommentService {
 
     public Page<CommentResponseDTO> getAllPostComments(long pid, String commentOrder, int offset, int pageSize) {
         if (commentOrder.toLowerCase().equals("fresh")) {
-            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of((offset-1), pageSize).withSort(Sort.by("createdAt")));
+            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of((offset - 1), pageSize).withSort(Sort.by("createdAt")));
             return new PageImpl<>(commentsPage.stream()
                     .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
                     collect(Collectors.toList()));
         }
         if (commentOrder.toLowerCase().equals("hot")) {
-            return new PageImpl<>(dao.getAllCommentsForPostSortedByReactionCount(offset,pageSize,pid));
+            return new PageImpl<>(dao.getAllCommentsForPostSortedByReactionCount(offset, pageSize, pid));
         }
         throw new BadRequestException("No such filter.");
     }

@@ -17,7 +17,7 @@ public class TagController {
     public final TagService tagService;
 
     @PostMapping("/tag")
-    public ResponseEntity<?> createdTag(@RequestBody TagCreatedDTO tagCreatedDto){
+    public ResponseEntity<?> createdTag(@RequestBody TagCreatedDTO tagCreatedDto) {
         tagService.createdTag(tagCreatedDto);
         return ResponseEntity.ok().build();
     }

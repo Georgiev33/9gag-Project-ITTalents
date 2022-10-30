@@ -26,7 +26,7 @@ public class FileStoreService {
     public String saveFile(MultipartFile file) {
         String ext = FilenameUtils.getExtension(file.getOriginalFilename());
 
-        if (!AVAILABLE_FILE_TYPE.contains(ext)){
+        if (!AVAILABLE_FILE_TYPE.contains(ext)) {
             throw new UnauthorizedException("Invalid file type");
         }
         Path pathToFile = Paths.get("uploads");
@@ -41,9 +41,9 @@ public class FileStoreService {
         }
     }
 
-    public File getFile(String pathToFile){
-        File file =  new File("uploads" +File.separator + pathToFile);
-        if (!file.exists()){
+    public File getFile(String pathToFile) {
+        File file = new File("uploads" + File.separator + pathToFile);
+        if (!file.exists()) {
             throw new NotFoundException("File does not exist!");
         }
         return file;
