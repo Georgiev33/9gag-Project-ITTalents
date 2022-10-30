@@ -30,6 +30,9 @@ public class UserController {
 
     @PostMapping("/auth")
     public ResponseEntity<UserWithoutPasswordDTO> login(@RequestBody UserLoginDTO userDTO, HttpSession s) {
+        if (s.getAttribute("LOGGED") != null) {
+            throw new BadRequestException("You are already logged in!");
+        }
         UserWithoutPasswordDTO result = userService.login(userDTO);
         if (result != null) {
             s.setAttribute("LOGGED", true);
