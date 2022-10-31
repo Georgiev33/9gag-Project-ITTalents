@@ -19,4 +19,5 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
 
     @Query("SELECT e.resourcePath FROM CommentEntity e WHERE e.id = :cid")
     String takeFilePath(@Param("cid") Long cid);
+
 }

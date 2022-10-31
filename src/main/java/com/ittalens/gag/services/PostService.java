@@ -1,5 +1,4 @@
 package com.ittalens.gag.services;
-
 import com.ittalens.gag.model.dao.PostDAO;
 import com.ittalens.gag.model.dto.posts.PostCreateReqDTO;
 import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
@@ -21,16 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,6 +69,7 @@ public class PostService {
     }
 
     public Page<PostRespDTO> getAllByCreationDate(int offset, int pageSize, String sortType) {
+        validatePage(offset);
         Page<PostEntity> postEntities = null;
         if (sortType.toLowerCase().equals("desc")) {
             postEntities = postRepository.findByOrderByCreatedAtDesc(PageRequest.of((offset - 1), pageSize));
@@ -91,6 +85,7 @@ public class PostService {
     }
 
     public Page<PostRespDTO> findPostsByWord(String word, int offset, int pageSize) {
+        validatePage(offset);
         Page<PostEntity> postEntities = postRepository.findByTitleContains(word, PageRequest.of((offset - 1), pageSize));
         if (postEntities.isEmpty()) {
             throw new NotFoundException("Don't have a post with this word");
@@ -147,6 +142,7 @@ public class PostService {
     }
 
     public Page<PostRespDTO> getAllPostsCategory(Long categoryId, int offset, int pageSize, String sortType) {
+        validatePage(offset);
         List<PostRespDTO> respDTOS = null;
         if (sortType.toLowerCase().equals("hot")) {
             respDTOS = dao.getAllRecentPostsByCategorySortedByReactionCount((offset - 1), pageSize, categoryId);
@@ -159,10 +155,12 @@ public class PostService {
     }
 
     public Page<PostRespDTO> findAllSortedByReactionCount(int offset, int pageSize) {
+        validatePage(offset);
         return new PageImpl<>(dao.getAllRecentPostsSortedByReactionCount((offset - 1), pageSize));
     }
 
     public Page<PostRespDTO> allPostsWithTag(String tag, int offset, int pageSize, String sortType) {
+        validatePage(offset);
         List<PostRespDTO> respDTOS = null;
         TagEntity tagEntity = tagRepository.findByTagType(tag);
         if (tagEntity == null) {
@@ -225,5 +223,10 @@ public class PostService {
     private void setReactions(PostRespDTO respDTO) {
         respDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(respDTO.getId()));
         respDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(respDTO.getId()));
+    }
+    private void validatePage(int page){
+        if(page < 1){
+            throw new BadRequestException("Invalid page.");
+        }
     }
 }

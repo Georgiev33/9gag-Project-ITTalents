@@ -37,7 +37,7 @@ public class CommentController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> createdParentComment(@ModelAttribute ParentCommentDTO parentCommentDto, HttpSession session) {
+    public ResponseEntity<?> createParentComment(@ModelAttribute ParentCommentDTO parentCommentDto, HttpSession session) {
         Long userId = Long.parseLong(session.getAttribute("USER_ID").toString());
         commentService.createdComment(parentCommentDto, userId);
         return ResponseEntity.ok("Comment was uploaded!");
@@ -66,9 +66,10 @@ public class CommentController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/replies/{cid}/{offset}/{pageSize}")
-    public ResponseEntity<?> getAllCommentReplies(@PathVariable long cid, @PathVariable int offset, @PathVariable int pageSize) {
-        return ResponseEntity.ok(commentService.getAllCommentReplies(cid, offset, pageSize));
+    @GetMapping("/replies/{cid}")
+    public ResponseEntity<?> getAllCommentReplies(@PathVariable long cid,@RequestParam(name = "page", defaultValue = "1") int page,
+                                                                         @RequestParam(name = "per_page", defaultValue = "10") int perPage) {
+        return ResponseEntity.ok(commentService.getAllCommentReplies(cid, page, perPage));
     }
 
     @GetMapping("/download/{cid}")

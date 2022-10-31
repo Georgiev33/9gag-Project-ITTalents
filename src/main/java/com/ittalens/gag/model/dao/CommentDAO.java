@@ -31,7 +31,7 @@ public class CommentDAO {
             @Override
             public void setValues(PreparedStatement ps) throws SQLException {
                 ps.setLong(1,postId);
-                ps.setInt(2,(offset-1) * pageSize);
+                ps.setInt(2,offset * pageSize);
                 ps.setInt(3, pageSize);
             }
         }, (rs, rowNum) -> new CommentResponseDTO(

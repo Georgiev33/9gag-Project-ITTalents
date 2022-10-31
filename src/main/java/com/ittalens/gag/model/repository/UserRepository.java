@@ -11,10 +11,12 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findUsersByEmail(String email);
 
-    List<User> findUsersByUserName(String username);
+    @Query(value = "SELECT user_name FROM users WHERE user_name = ?1", nativeQuery = true)
+    String findExistingUsername(String username);
 
     Optional<User> findUserByUserName(String username);
 
-    @Query(value = "SELECT * FROM users WHERE verification_code = ?", nativeQuery = true)
-    Optional<User> findByVerificationCode(@Param("code") String code);
+    @Query(value = "SELECT * FROM users WHERE verification_code = ?1", nativeQuery = true)
+
+    Optional<User> findByVerificationCode(String code);
 }

@@ -38,10 +38,8 @@ public class UserService {
         if (u.getAge() < 16 || u.getAge() > 119) {
             throw new BadRequestException("Invalid age.");
         }
-        if (!u.getPassword().equals(u.getRepeatedPassword())) {
-            throw new BadRequestException("Passwords don't match!");
-        }
-        if (repository.findUsersByUserName(u.getUserName()).size() > 0) {
+        validatePassword(u.getPassword(), u.getRepeatedPassword());
+        if (!isUserNameFree(u.getUserName())) {
             throw new BadRequestException("Username already exists");
         }
         u.setRegisterDate(LocalDateTime.now());
@@ -76,7 +74,6 @@ public class UserService {
         u.setPassword(RandomString.make(99));
         u.setActive(false);
         repository.save(u);
-        return;
     }
 
     public UserWithoutPasswordDTO edit(long userId, EditUserDTO editUserDTO) {
@@ -94,7 +91,7 @@ public class UserService {
             u.setLastName(editUserDTO.getLastName());
         }
         if (editUserDTO.getAge() != u.getAge() && editUserDTO.getAge() != 0) {
-            if (editUserDTO.getAge() < u.getAge() || editUserDTO.getAge() > 110) {
+            if (editUserDTO.getAge() < u.getAge() || editUserDTO.getAge() > 119) {
                 throw new BadRequestException("Invalid age edit.");
             }
             u.setAge(editUserDTO.getAge());
@@ -140,6 +137,12 @@ public class UserService {
                 collect(Collectors.toList());
     }
 
+    public void comparingVerificationCode(String code) {
+        User user = repository.findByVerificationCode(code).orElseThrow(() -> new UnauthorizedException("Not correct verification code"));
+        user.setActive(true);
+        repository.save(user);
+    }
+
     private boolean validateEmail(String email) {
         if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
             throw new BadRequestException("Invalid email.");
@@ -151,15 +154,17 @@ public class UserService {
     }
 
     private boolean isUserNameFree(String username) {
-        return !repository.findUserByUserName(username).isPresent();
+        return repository.findExistingUsername(username) == null;
     }
 
-    public void comparingVerificationCode(String code) {
-        User user = repository.findByVerificationCode(code).orElseThrow(() -> new UnauthorizedException("Not correct verification code"));
-        user.setActive(true);
-        repository.save(user);
+    private void validatePassword(String password, String repeatedPassword) {
+        if (!password.equals(repeatedPassword)) {
+            throw new BadRequestException("Passwords don't match!");
+        }
+        if(password.length() < 8){
+            throw new BadRequestException("Password must be at least 8 symbols long.");
+        }
     }
-
     private User findById(long uid) {
         return repository.findById(uid).orElseThrow(() -> new NotFoundException("User not found."));
     }

@@ -125,20 +125,19 @@ public class CommentService {
     }
 
     public Page<CommentResponseDTO> getAllCommentReplies(long cid, int offset, int pageSize) {
-        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityIdOrderByCreatedAtDesc(cid, PageRequest.of(offset, pageSize));
-        return new PageImpl<>(commentEntityPage.stream().map(commentEntity -> mapper
-                .map(commentEntity, CommentResponseDTO.class)).collect(Collectors.toList()));
+        validatePage(offset);
+        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityIdOrderByCreatedAtDesc(cid, PageRequest.of((offset-1), pageSize));
+        return mapCommentToDTO(commentEntityPage);
     }
 
     public Page<CommentResponseDTO> getAllPostComments(long pid, String commentOrder, int offset, int pageSize) {
+        validatePage(offset);
         if (commentOrder.toLowerCase().equals("fresh")) {
             Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of((offset - 1), pageSize).withSort(Sort.by("createdAt")));
-            return new PageImpl<>(commentsPage.stream()
-                    .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
-                    collect(Collectors.toList()));
+            return mapCommentToDTO(commentsPage);
         }
         if (commentOrder.toLowerCase().equals("hot")) {
-            return new PageImpl<>(dao.getAllCommentsForPostSortedByReactionCount(offset, pageSize, pid));
+            return new PageImpl<>(dao.getAllCommentsForPostSortedByReactionCount((offset-1), pageSize, pid));
         }
         throw new BadRequestException("No such filter.");
     }
@@ -176,5 +175,17 @@ public class CommentService {
     public File takeFile(Long cid) {
         String filePath = commentRepository.takeFilePath(cid);
         return fileStoreService.getFile(filePath);
+    }
+    private Page<CommentResponseDTO> mapCommentToDTO(Page<CommentEntity> commentsPage){
+        Page<CommentResponseDTO> commentResponseDTOS = new PageImpl<>(commentsPage.stream()
+                .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
+                collect(Collectors.toList()));
+        setURL(commentResponseDTOS);
+        return commentResponseDTOS;
+    }
+    private void validatePage(int page){
+        if(page < 1){
+            throw new BadRequestException("Invalid page.");
+        }
     }
 }

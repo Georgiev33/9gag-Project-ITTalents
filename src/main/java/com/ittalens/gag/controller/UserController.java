@@ -3,14 +3,11 @@ package com.ittalens.gag.controller;
 import com.ittalens.gag.model.dto.userdtos.*;
 
 import com.ittalens.gag.model.exceptions.BadRequestException;
-import com.ittalens.gag.model.exceptions.UnauthorizedException;
 import com.ittalens.gag.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.List;
 
@@ -44,18 +41,18 @@ public class UserController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession s) {
         s.invalidate();
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Logged out.");
     }
 
     @PutMapping()
     public ResponseEntity<UserWithoutPasswordDTO> edit(@RequestBody EditUserDTO userDTO, HttpSession s) {
-        UserWithoutPasswordDTO result = userService.edit((Integer) s.getAttribute("USER_ID"), userDTO);
+        UserWithoutPasswordDTO result = userService.edit(Long.parseLong(s.getAttribute("USER_ID").toString()), userDTO);
         return ResponseEntity.ok(result);
     }
 
     @PutMapping("/pass")
     public ResponseEntity<UserWithoutPasswordDTO> editPass(@RequestBody ChangePasswordDTO userDTO, HttpSession s) {
-        UserWithoutPasswordDTO result = userService.editPass(userDTO, (Integer) s.getAttribute("USER_ID"));
+        UserWithoutPasswordDTO result = userService.editPass(userDTO, Long.parseLong(s.getAttribute("USER_ID").toString()));
         return ResponseEntity.ok(result);
     }
 
@@ -72,7 +69,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable long id) {
         userService.delete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("User deleted successfully.");
     }
 
     @PutMapping("/{code}")
