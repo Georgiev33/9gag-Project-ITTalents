@@ -32,6 +32,10 @@ public class UserService {
     private final EmailSenderService emailSenderService;
 
     public void registerUser(RegisterUserDTO u) {
+        u.setUserName(u.getUserName().trim());
+        u.setPassword(u.getPassword().trim());
+        u.setRepeatedPassword(u.getRepeatedPassword().trim());
+
         if (!validateEmail(u.getEmail())) {
             throw new BadRequestException("email already exists.");
         }
@@ -42,6 +46,7 @@ public class UserService {
         if (!isUserNameFree(u.getUserName())) {
             throw new BadRequestException("Username already exists");
         }
+
         u.setRegisterDate(LocalDateTime.now());
         u.setActive(false);
         User user = mapper.map(u, User.class);
