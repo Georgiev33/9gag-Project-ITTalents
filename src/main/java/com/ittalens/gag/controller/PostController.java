@@ -83,7 +83,7 @@ public class PostController {
     private Page<PostRespDTO> getAllPostsCategory(@RequestParam(name = "category_id", defaultValue = "1") Long categoryId,
                                                   @RequestParam(name = "page", defaultValue = "1") int offset,
                                                   @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
-                                                  @RequestParam(name = "sorted_type", defaultValue = "fresh") String sortType) {
+                                                  @RequestParam(name = "sorted_type") String sortType) {
         return postService.getAllPostsCategory(categoryId, offset, pageSize, sortType);
     }
 
