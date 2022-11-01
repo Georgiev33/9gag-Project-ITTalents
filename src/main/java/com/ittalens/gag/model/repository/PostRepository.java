@@ -25,5 +25,5 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     @Query("SELECT e.resourcePath FROM PostEntity e WHERE e.id = :pid")
     String takeFilePath(@Param("pid") Long pid);
 
-
+    void deleteAllByCreatedBy(Long uid);
 }

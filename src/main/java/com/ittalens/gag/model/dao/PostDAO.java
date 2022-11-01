@@ -5,11 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -37,7 +35,7 @@ public class PostDAO {
             "COUNT(CASE WHEN r.status = 1 THEN r.status END) AS likes,\n" +
             "COUNT(CASE WHEN r.status = 0 THEN r.status END) AS dislikes\n" +
             "FROM posts p LEFT JOIN users_posts_reactions r ON (p.id = r.post_id)\n" +
-            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -70 DAY) AND p.category_id = ?\n" +
+            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) AND p.category_id = ?\n" +
             "ORDER BY number_of_reactions DESC LIMIT ?,?";
 
     private static final String SORTED_BY_CATEGORY_AND_DATE =
@@ -46,7 +44,7 @@ public class PostDAO {
             "COUNT(CASE WHEN upr.status = 0 THEN upr.status END) AS dislikes\n" +
             "FROM posts p \n" +
             "LEFT JOIN users_posts_reactions upr ON (p.id = upr.post_id )\n" +
-            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -70 DAY) AND p.category_id = ? \n" +
+            "GROUP BY p.id HAVING p.created_at > DATE_ADD(CURDATE(), INTERVAL -7 DAY) AND p.category_id = ? \n" +
             "ORDER BY p.created_at DESC LIMIT ?,?";
 
     private static final String SORTED_BY_TAG_AND_REACT =
@@ -92,28 +90,21 @@ public class PostDAO {
 
     private List<PostRespDTO> withThreeParam(String sql, int offset, int pageSize) {
 
-        List<PostRespDTO> respDTOS = jdbcTemplate.query(sql, new PreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps) throws SQLException {
-                ps.setInt(1, offset * pageSize);
-                ps.setInt(2, pageSize);
-            }
+        List<PostRespDTO> respDTOS = jdbcTemplate.query(sql, ps -> {
+            ps.setInt(1, offset * pageSize);
+            ps.setInt(2, pageSize);
         }, new PostMapper());
         return respDTOS;
     }
 
     private List<PostRespDTO> withFourParam(String sql, int offset, int pageSize, long id) {
-            PostMapper mapper = new PostMapper();
-        List<PostRespDTO> respDTOS = jdbcTemplate.query(sql, new PreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps) throws SQLException {
-                ps.setLong(1, id);
-                ps.setInt(2, offset * pageSize);
-                ps.setInt(3, pageSize);
-            }
+
+        List<PostRespDTO> respDTOS = jdbcTemplate.query(sql, ps -> {
+            ps.setLong(1, id);
+            ps.setInt(2, offset * pageSize);
+            ps.setInt(3, pageSize);
         }, new PostMapper());
         return respDTOS;
-
     }
 
     private static class PostMapper implements RowMapper<PostRespDTO>{
@@ -131,5 +122,4 @@ public class PostDAO {
             return respDTO;
         }
     }
-
 }

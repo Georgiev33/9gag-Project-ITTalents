@@ -3,6 +3,7 @@ package com.ittalens.gag.controller;
 import com.ittalens.gag.model.dto.userdtos.*;
 
 import com.ittalens.gag.model.exceptions.BadRequestException;
+import com.ittalens.gag.model.exceptions.UnauthorizedException;
 import com.ittalens.gag.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,9 @@ public class UserController {
 
 
     @PostMapping("/register")
-    @ResponseStatus(code = HttpStatus.CREATED)
-    public ResponseEntity<RegisterUserDTO> registerUser(@RequestBody RegisterUserDTO userDTO) {
+    public ResponseEntity<?> registerUser(@RequestBody RegisterUserDTO userDTO) {
         userService.registerUser(userDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("To complete your registration please verify your email.");
     }
 
     @PostMapping("/auth")
@@ -44,7 +44,7 @@ public class UserController {
         return ResponseEntity.ok("Logged out.");
     }
 
-    @PutMapping()
+    @PutMapping
     public ResponseEntity<UserWithoutPasswordDTO> edit(@RequestBody EditUserDTO userDTO, HttpSession s) {
         UserWithoutPasswordDTO result = userService.edit(Long.parseLong(s.getAttribute("USER_ID").toString()), userDTO);
         return ResponseEntity.ok(result);
@@ -66,15 +66,14 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable long id) {
-        userService.delete(id);
+    @DeleteMapping
+    public ResponseEntity<?> deleteUser(HttpSession session) {
+        userService.delete(Long.parseLong(session.getAttribute("USER_ID").toString()));
         return ResponseEntity.ok("User deleted successfully.");
     }
 
-    @PutMapping("/{code}")
-    public ResponseEntity<?> verificatinCode(@PathVariable String code) {
-        userService.comparingVerificationCode(code);
-        return ResponseEntity.ok("Еmail has been verified");
+    @PutMapping("/verify/{code}")
+    public ResponseEntity<UserWithoutPasswordDTO> verificatinCode(@PathVariable String code) {
+        return ResponseEntity.ok(userService.comparingVerificationCode(code));
     }
 }

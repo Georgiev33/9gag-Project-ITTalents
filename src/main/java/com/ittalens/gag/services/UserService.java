@@ -5,6 +5,8 @@ import com.ittalens.gag.model.entity.User;
 import com.ittalens.gag.model.exceptions.BadRequestException;
 import com.ittalens.gag.model.exceptions.NotFoundException;
 import com.ittalens.gag.model.exceptions.UnauthorizedException;
+import com.ittalens.gag.model.repository.CommentRepository;
+import com.ittalens.gag.model.repository.PostRepository;
 import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import net.bytebuddy.utility.RandomString;
@@ -12,9 +14,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.mail.MessagingException;
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +31,10 @@ public class UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     @Autowired
     private final EmailSenderService emailSenderService;
+    @Autowired
+    private final PostRepository postRepository;
+    @Autowired
+    private final CommentRepository commentRepository;
 
     public void registerUser(RegisterUserDTO u) {
         u.setUserName(u.getUserName().trim());
@@ -37,14 +42,14 @@ public class UserService {
         u.setRepeatedPassword(u.getRepeatedPassword().trim());
 
         if (!validateEmail(u.getEmail())) {
-            throw new BadRequestException("email already exists.");
+            throw new BadRequestException("Email already exists!");
         }
         if (u.getAge() < 16 || u.getAge() > 119) {
-            throw new BadRequestException("Invalid age.");
+            throw new BadRequestException("Invalid age!");
         }
         validatePassword(u.getPassword(), u.getRepeatedPassword());
-        if (!isUserNameFree(u.getUserName())) {
-            throw new BadRequestException("Username already exists");
+        if (!isUserNameFree(u.getUserName()) && u.getUserName().length() < 3) {
+            throw new BadRequestException("Invalid username!");
         }
 
         u.setRegisterDate(LocalDateTime.now());
@@ -54,12 +59,7 @@ public class UserService {
         user.setVerificationCode(verificationCode);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         repository.save(user);
-
-        try {
-            emailSenderService.sendVerificationEmail(user);
-        } catch (MessagingException | UnsupportedEncodingException e) {
-            throw new UnauthorizedException("Have a problem with email");
-        }
+        emailSenderService.sendVerificationEmail(user);
     }
 
     public UserWithoutPasswordDTO getUserById(long id) {
@@ -67,6 +67,7 @@ public class UserService {
         return mapper.map(user, UserWithoutPasswordDTO.class);
     }
 
+    @Transactional
     public void delete(long id) {
         User u = findById(id);
         if (!u.isActive()) {
@@ -79,6 +80,8 @@ public class UserService {
         u.setPassword(RandomString.make(99));
         u.setActive(false);
         repository.save(u);
+        postRepository.deleteAllByCreatedBy(u.getId());
+        commentRepository.deleteAllByCreatedBy(u.getId());
     }
 
     public UserWithoutPasswordDTO edit(long userId, EditUserDTO editUserDTO) {
@@ -142,10 +145,11 @@ public class UserService {
                 collect(Collectors.toList());
     }
 
-    public void comparingVerificationCode(String code) {
+    public UserWithoutPasswordDTO comparingVerificationCode(String code) {
         User user = repository.findByVerificationCode(code).orElseThrow(() -> new UnauthorizedException("Not correct verification code"));
         user.setActive(true);
         repository.save(user);
+        return mapper.map(user, UserWithoutPasswordDTO.class);
     }
 
     private boolean validateEmail(String email) {
@@ -166,10 +170,11 @@ public class UserService {
         if (!password.equals(repeatedPassword)) {
             throw new BadRequestException("Passwords don't match!");
         }
-        if(password.length() < 8){
+        if (password.length() < 8) {
             throw new BadRequestException("Password must be at least 8 symbols long.");
         }
     }
+
     private User findById(long uid) {
         return repository.findById(uid).orElseThrow(() -> new NotFoundException("User not found."));
     }

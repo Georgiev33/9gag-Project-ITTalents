@@ -3,6 +3,7 @@ package com.ittalens.gag.controller;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +20,8 @@ public class SecurityFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String requestURI = request.getRequestURI();
 
-        if (requestURI.contains("/users/register") || requestURI.contains("/users") || requestURI.contains("/users/auth")) {
+        if (requestURI.contains("/users/register") || requestURI.contains("/users/verify") ||
+                requestURI.contains("/users/auth") || requestURI.contains("posts/all")) {
             chain.doFilter(servletRequest, servletResponse);
             return;
         }

@@ -16,23 +16,29 @@ public class EmailSenderService {
     @Autowired
     private JavaMailSender mailSender;
 
-    public void sendVerificationEmail(User user) throws MessagingException, UnsupportedEncodingException {
-        String verifyURL = "http://localhost:8080/users/" + user.getVerificationCode();
-        String subject = "Please verify your registration";
-        String senderName = "Nine GAG service";
-        String mailContent = "<p>Dear " + user.getFirstName() + " " + user.getLastName() + ",<p>";
-        mailContent += "<p>Please click the link below to verify your registration: <p>";
-        mailContent += "<p>" + verifyURL + "<p>";
-        mailContent += "<p> Thank you very much! <p>";
+    public void sendVerificationEmail(User user) {
 
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
+        new Thread(() -> {
+            String verifyURL = "http://localhost:8080/users/verify/" + user.getVerificationCode();
+            String subject = "Please verify your registration";
+            String senderName = "Nine GAG service";
+            String mailContent = "<p>Dear " + user.getFirstName() + " " + user.getLastName() + ",<p>";
+            mailContent += "<p>Please click the link below to verify your registration: <p>";
+            mailContent += "<p>" + verifyURL + "<p>";
+            mailContent += "<p> Thank you very much! <p>";
 
-        helper.setFrom("noreplynninegagservice@gmail.com", senderName);
-        helper.setTo(user.getEmail());
-        helper.setSubject(subject);
-        helper.setText(mailContent, true);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message);
 
-        mailSender.send(message);
+            try {
+                helper.setFrom("noreplynninegagservice@gmail.com", senderName);
+                helper.setTo(user.getEmail());
+                helper.setSubject(subject);
+                helper.setText(mailContent, true);
+            } catch (MessagingException | UnsupportedEncodingException e) {
+                throw new RuntimeException("Email verification failed!");
+            }
+            mailSender.send(message);
+        }).start();
     }
 }
