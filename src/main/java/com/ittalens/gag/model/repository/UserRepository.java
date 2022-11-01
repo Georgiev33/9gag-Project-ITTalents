@@ -3,7 +3,6 @@ package com.ittalens.gag.model.repository;
 import com.ittalens.gag.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +16,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findUserByUserName(String username);
 
     @Query(value = "SELECT * FROM users WHERE verification_code = ?1", nativeQuery = true)
-
     Optional<User> findByVerificationCode(String code);
 }
