@@ -5,6 +5,7 @@ import com.ittalens.gag.model.dto.comments.*;
 import com.ittalens.gag.model.entity.*;
 import com.ittalens.gag.model.exceptions.BadRequestException;
 import com.ittalens.gag.model.exceptions.NotFoundException;
+import com.ittalens.gag.model.exceptions.UnauthorizedException;
 import com.ittalens.gag.model.repository.CommentReactionsRepository;
 import com.ittalens.gag.model.repository.CommentRepository;
 import com.ittalens.gag.model.repository.UserRepository;
@@ -41,17 +42,22 @@ public class CommentService {
     private CommentDAO dao;
 
 
-    public void createdComment(ParentCommentDTO parentCommentDto, Long userId) {
+    public CommentResponseDTO createComment(ParentCommentDTO parentCommentDto, Long userId) {
         CommentEntity commentEntity = new CommentEntity();
-
+        boolean hasFile = false;
         if (parentCommentDto.getFile() != null) {
             MultipartFile originalFile = parentCommentDto.getFile();
-            String internalFileName = fileStoreService.saveFile(originalFile);
+            String internalFileName = fileStoreService.saveFile(originalFile, userId);
             commentEntity.setResourcePath(internalFileName);
+            hasFile = true;
+        }
+
+        if (parentCommentDto.getPostId() == null) {
+            throw new BadRequestException("Missing post ID");
         }
 
         if (parentCommentDto.getText() == null) {
-            throw new BadRequestException("Now text in comment!");
+            throw new BadRequestException("Can't create comment with no text.");
         }
 
         commentEntity.setText(parentCommentDto.getText());
@@ -59,6 +65,11 @@ public class CommentService {
         commentEntity.setCreatedBy(userId);
         commentEntity.setPostId(parentCommentDto.getPostId());
         commentRepository.save(commentEntity);
+        CommentResponseDTO commentResponseDTO = mapper.map(commentEntity, CommentResponseDTO.class);
+        if (hasFile) {
+            commentResponseDTO.setResourceURL("http://localhost:8080/comment/download/" + commentResponseDTO.getId());
+        }
+        return commentResponseDTO;
     }
 
     public CommentReactionRespDTO react(Long userId, Long commentId, boolean status) {
@@ -93,12 +104,12 @@ public class CommentService {
         CommentEntity parentComment = findCommentById(cid);
 
         if (file != null) {
-            String internalFileName = fileStoreService.saveFile(file);
+            String internalFileName = fileStoreService.saveFile(file, uId);
             comment.setResourcePath(internalFileName);
         }
 
         if (childCommentDTO.getText() == null) {
-            throw new BadRequestException("Now text in comment!");
+            throw new BadRequestException("Can't create comment with no text.");
         }
 
         comment.setCommentEntity(parentComment);
@@ -112,10 +123,14 @@ public class CommentService {
         return responseDTO;
     }
 
-    public EditCommentDTO editComment(long cid, EditCommentDTO commentDTO) {
+    public EditCommentDTO editComment(long cid, EditCommentDTO commentDTO, Long userId) {
         CommentEntity comment = findCommentById(cid);
+        if (!comment.getCreatedBy().equals(userId)){
+            throw new UnauthorizedException("Can't edit a comment that is not your own.");
+        }
         comment.setText(commentDTO.getNewText());
         commentRepository.save(comment);
+        commentDTO.setCommentId(comment.getId());
         return commentDTO;
     }
 
@@ -126,24 +141,27 @@ public class CommentService {
 
     public Page<CommentResponseDTO> getAllCommentReplies(long cid, int offset, int pageSize) {
         validatePage(offset);
-        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityIdOrderByCreatedAtDesc(cid, PageRequest.of((offset-1), pageSize));
+        Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityIdOrderByCreatedAtDesc(cid, PageRequest.of((offset - 1), pageSize));
         return mapCommentToDTO(commentEntityPage);
     }
 
     public Page<CommentResponseDTO> getAllPostComments(long pid, String commentOrder, int offset, int pageSize) {
         validatePage(offset);
         if (commentOrder.toLowerCase().equals("fresh")) {
-            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNull(pid, PageRequest.of((offset - 1), pageSize).withSort(Sort.by("createdAt")));
+            Page<CommentEntity> commentsPage = commentRepository.findAllByPostIdAndCommentEntityIsNullOrderByCreatedAtDesc(pid, PageRequest.of((offset - 1), pageSize).withSort(Sort.by("createdAt")));
             return mapCommentToDTO(commentsPage);
         }
         if (commentOrder.toLowerCase().equals("hot")) {
-            return new PageImpl<>(dao.getAllCommentsForPostSortedByReactionCount((offset-1), pageSize, pid));
+            return new PageImpl<>(dao.getAllCommentsForPostSortedByReactionCount((offset - 1), pageSize, pid));
         }
         throw new BadRequestException("No such filter.");
     }
 
-    public void deleteComment(long cid) {
+    public void deleteComment(long cid, Long userId) {
         CommentEntity comment = findCommentById(cid);
+        if (!comment.getCreatedBy().equals(userId)){
+            throw new UnauthorizedException("Can't delete a comment that is not your own.");
+        }
         commentRepository.delete(comment);
     }
 
@@ -176,15 +194,17 @@ public class CommentService {
         String filePath = commentRepository.takeFilePath(cid);
         return fileStoreService.getFile(filePath);
     }
-    private Page<CommentResponseDTO> mapCommentToDTO(Page<CommentEntity> commentsPage){
+
+    private Page<CommentResponseDTO> mapCommentToDTO(Page<CommentEntity> commentsPage) {
         Page<CommentResponseDTO> commentResponseDTOS = new PageImpl<>(commentsPage.stream()
                 .map(commentEntity -> mapper.map(commentEntity, CommentResponseDTO.class)).
                 collect(Collectors.toList()));
         setURL(commentResponseDTOS);
         return commentResponseDTOS;
     }
-    private void validatePage(int page){
-        if(page < 1){
+
+    private void validatePage(int page) {
+        if (page < 1) {
             throw new BadRequestException("Invalid page.");
         }
     }

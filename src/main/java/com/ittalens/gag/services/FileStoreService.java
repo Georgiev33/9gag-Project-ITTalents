@@ -23,21 +23,26 @@ public class FileStoreService {
 
     private static final List<String> AVAILABLE_FILE_TYPE = Arrays.asList("jpg", "png", "mp4", "m4v");
 
-    public String saveFile(MultipartFile file) {
+    public String saveFile(MultipartFile file,Long uid) {
         String ext = FilenameUtils.getExtension(file.getOriginalFilename());
+
+        if (file.isEmpty()){
+            throw new BadRequestException("File is missing");
+        }
 
         if (!AVAILABLE_FILE_TYPE.contains(ext)) {
             throw new UnauthorizedException("Invalid file type");
         }
+
         Path pathToFile = Paths.get("uploads");
 
         try {
-            String newFileName = System.nanoTime() + "." + ext;
+            String newFileName = System.nanoTime() + uid.toString() + "." + ext;
             Files.copy(file.getInputStream(), pathToFile.resolve(newFileName));
             return newFileName;
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BadRequestException("File was not saved");
+            throw new BadRequestException("File was not saved" + e.getMessage());
         }
     }
 

@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.time.LocalDateTime;
@@ -49,15 +50,15 @@ public class PostService {
     @Autowired
     private final PostDAO dao;
 
-    public void createPost(PostCreateReqDTO postDto, Long userId) {
-        MultipartFile originalFile = postDto.getFile();
-        String internalFileName = fileStoreService.saveFile(originalFile);
-        PostEntity postEntity = new PostEntity();
+    public PostRespDTO createPost(PostCreateReqDTO postDto, Long userId) {
 
-        if (postDto.getTitle() == null || postDto.getCategoryId() == null) {
+        if (postDto.getTitle() == null || postDto.getCategoryId() == null || postDto.getFile() == null || postDto.getFile().isEmpty()) {
             throw new BadRequestException("Some fields are missing!");
         }
 
+        MultipartFile originalFile = postDto.getFile();
+        String internalFileName = fileStoreService.saveFile(originalFile,userId);
+        PostEntity postEntity = new PostEntity();
         postEntity.setTitle(postDto.getTitle());
         postEntity.setResourcePath(internalFileName);
         postEntity.setCreatedAt(LocalDateTime.now());
@@ -66,6 +67,9 @@ public class PostService {
         postEntity.getTags().addAll(setTagsFromPostDto(postDto.getTags()));
         postRepository.save(postEntity);
 
+        PostRespDTO postRespDTO = modelMapper.map(postEntity, PostRespDTO.class);
+        postRespDTO.setResourceURL("http://localhost:8080/posts/download/" + postRespDTO.getId());
+        return postRespDTO;
     }
 
     public Page<PostRespDTO> getAllByCreationDate(int offset, int pageSize, String sortType) {
@@ -96,8 +100,11 @@ public class PostService {
         return postDtos;
     }
 
-    public void deletedPostById(Long id) {
+    public void deletedPostById(Long id, Long userId) {
         PostEntity post = postRepository.findById(id).orElseThrow(() -> new NotFoundException("This post does not exist"));
+        if (!post.getCreatedBy().equals(userId)){
+            throw new BadRequestException("Can't delete a post that is not your own.");
+        }
         postRepository.delete(post);
     }
 

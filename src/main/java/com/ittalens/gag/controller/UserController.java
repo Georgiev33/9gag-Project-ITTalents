@@ -69,7 +69,7 @@ public class UserController {
     @DeleteMapping
     public ResponseEntity<?> deleteUser(HttpSession session) {
         userService.delete(Long.parseLong(session.getAttribute("USER_ID").toString()));
-        return ResponseEntity.ok("User deleted successfully.");
+        return ResponseEntity.ok("Successfully deleted your account.");
     }
 
     @PutMapping("/verify/{code}")

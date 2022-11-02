@@ -13,6 +13,6 @@ public class PostCreateReqDTO {
     private MultipartFile file;
     private Long categoryId;
     private List<String> tags = new ArrayList<>();
-    private Long userId;
+    private Long createdBy;
 
 }

@@ -26,9 +26,9 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping("/upload")
-    private ResponseEntity<?> uploadFile(@ModelAttribute PostCreateReqDTO dto, HttpSession session) {
-        postService.createPost(dto, Long.parseLong(session.getAttribute("USER_ID").toString()));
-        return ResponseEntity.ok("Post is uploaded!");
+    private ResponseEntity<PostRespDTO> uploadFile(@ModelAttribute PostCreateReqDTO dto, HttpSession session) {
+        Long userId =  Long.parseLong(session.getAttribute("USER_ID").toString());
+        return ResponseEntity.ok( postService.createPost(dto,userId));
     }
 
     @GetMapping("/all")
@@ -52,9 +52,10 @@ public class PostController {
     }
 
     @DeleteMapping("/{id}")
-    private ResponseEntity<?> deletedPost(@PathVariable String id) {
-        postService.deletedPostById(Long.parseLong(id));
-        return ResponseEntity.ok("Post was deleted!");
+    private ResponseEntity<?> deletedPost(@PathVariable Long id, HttpSession session) {
+        Long userId = Long.parseLong(session.getAttribute("USER_ID").toString());
+        postService.deletedPostById(id,userId);
+        return ResponseEntity.ok("Successfully deleted your post!");
     }
 
     @PutMapping("{pid}/react")
