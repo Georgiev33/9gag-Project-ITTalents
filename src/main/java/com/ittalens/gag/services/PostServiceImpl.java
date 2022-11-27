@@ -1,4 +1,5 @@
 package com.ittalens.gag.services;
+
 import com.ittalens.gag.model.dao.PostDAO;
 import com.ittalens.gag.model.dto.posts.PostCreateReqDTO;
 import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
@@ -17,12 +18,13 @@ import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,25 +33,30 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class PostService {
+public class PostServiceImpl implements IPostService {
 
     @Autowired
     private final PostRepository postRepository;
     @Autowired
     private final TagRepository tagRepository;
     @Autowired
-    private final FileStoreService fileStoreService;
+    private final FileStoreServiceImpl fileStoreServiceImpl;
     @Autowired
     private final ModelMapper modelMapper;
     @Autowired
-    private final TagService tagService;
+    private final TagServiceImpl tagServiceImpl;
     @Autowired
     private final UserRepository userRepository;
     @Autowired
     private final PostReactionsRepository reactionsRepository;
     @Autowired
     private final PostDAO dao;
+    @Autowired
+    private ServerProperties serverProperties;
 
+    private final int port = serverProperties.getPort();
+
+    @Override
     public PostRespDTO createPost(PostCreateReqDTO postDto, Long userId) {
 
         if (postDto.getTitle() == null || postDto.getCategoryId() == null || postDto.getFile() == null || postDto.getFile().isEmpty()) {
@@ -57,7 +64,7 @@ public class PostService {
         }
 
         MultipartFile originalFile = postDto.getFile();
-        String internalFileName = fileStoreService.saveFile(originalFile,userId);
+        String internalFileName = fileStoreServiceImpl.saveFile(originalFile, userId);
         PostEntity postEntity = new PostEntity();
         postEntity.setTitle(postDto.getTitle());
         postEntity.setResourcePath(internalFileName);
@@ -68,10 +75,11 @@ public class PostService {
         postRepository.save(postEntity);
 
         PostRespDTO postRespDTO = modelMapper.map(postEntity, PostRespDTO.class);
-        postRespDTO.setResourceURL("http://localhost:8080/posts/download/" + postRespDTO.getId());
+        postRespDTO.setResourceURL("http://localhost:" + port + "/posts/download/" + postRespDTO.getId());
         return postRespDTO;
     }
 
+    @Override
     public Page<PostRespDTO> getAllByCreationDate(int offset, int pageSize, String sortType) {
         validatePage(offset);
         Page<PostEntity> postEntities = null;
@@ -88,6 +96,7 @@ public class PostService {
 
     }
 
+    @Override
     public Page<PostRespDTO> findPostsByWord(String word, int offset, int pageSize) {
         validatePage(offset);
         Page<PostEntity> postEntities = postRepository.findByTitleContains(word, PageRequest.of((offset - 1), pageSize));
@@ -100,14 +109,16 @@ public class PostService {
         return postDtos;
     }
 
+    @Override
     public void deletedPostById(Long id, Long userId) {
         PostEntity post = postRepository.findById(id).orElseThrow(() -> new NotFoundException("This post does not exist"));
-        if (!post.getCreatedBy().equals(userId)){
+        if (!post.getCreatedBy().equals(userId)) {
             throw new BadRequestException("Can't delete a post that is not your own.");
         }
         postRepository.delete(post);
     }
 
+    @Override
     public PostReactionResponseDTO react(Long pId, Long uId, boolean status) {
         User user = userRepository.findById(uId).orElseThrow(() -> new NotFoundException("No such user."));
         PostEntity post = postRepository.findById(pId).orElseThrow(() -> new NotFoundException("No such post."));
@@ -134,20 +145,23 @@ public class PostService {
         return responseDTO;
     }
 
+    @Override
     public PostRespDTO getPostById(String pid) {
         Long postId = Long.parseLong(pid);
         PostEntity post = postRepository.findById(postId).orElseThrow(() -> new NotFoundException("This post does not exist"));
         PostRespDTO postRespDTO = modelMapper.map(post, PostRespDTO.class);
-        postRespDTO.setResourceURL("http://localhost:8080/posts/download/" + postRespDTO.getId());
+        postRespDTO.setResourceURL("http://localhost:" + port + "/posts/download/" + postRespDTO.getId());
         setReactions(postRespDTO);
         return postRespDTO;
     }
 
+    @Override
     public File takeFile(String pid) {
         String filePath = postRepository.takeFilePath(Long.parseLong(pid));
-        return fileStoreService.getFile(filePath);
+        return fileStoreServiceImpl.getFile(filePath);
     }
 
+    @Override
     public Page<PostRespDTO> getAllPostsCategory(Long categoryId, int offset, int pageSize, String sortType) {
         validatePage(offset);
         List<PostRespDTO> respDTOS = null;
@@ -161,11 +175,13 @@ public class PostService {
         return new PageImpl<>(respDTOS);
     }
 
+    @Override
     public Page<PostRespDTO> findAllSortedByReactionCount(int offset, int pageSize) {
         validatePage(offset);
         return new PageImpl<>(dao.getAllRecentPostsSortedByReactionCount((offset - 1), pageSize));
     }
 
+    @Override
     public Page<PostRespDTO> allPostsWithTag(String tag, int offset, int pageSize, String sortType) {
         validatePage(offset);
         List<PostRespDTO> respDTOS = null;
@@ -194,7 +210,7 @@ public class PostService {
             if (tagEntity == null) {
                 TagCreatedDTO tagCreatedDto = new TagCreatedDTO();
                 tagCreatedDto.setTagType(typeTag);
-                tagService.createdTag(tagCreatedDto);
+                tagServiceImpl.createdTag(tagCreatedDto);
                 tagEntity = tagRepository.findByTagType(typeTag);
             }
             tagEntityList.add(tagEntity);
@@ -222,7 +238,7 @@ public class PostService {
 
     private void setURL(Page<PostRespDTO> postDtos) {
         for (PostRespDTO postRespDTO : postDtos) {
-            postRespDTO.setResourceURL("http://localhost:8080/posts/download/" + postRespDTO.getId());
+            postRespDTO.setResourceURL("http://localhost:" + port + "/posts/download/" + postRespDTO.getId());
             setReactions(postRespDTO);
         }
     }
@@ -231,8 +247,9 @@ public class PostService {
         respDTO.setLikes(reactionsRepository.countAllByStatusIsTrueAndPostId(respDTO.getId()));
         respDTO.setDislikes(reactionsRepository.countAllByStatusIsFalseAndPostId(respDTO.getId()));
     }
-    private void validatePage(int page){
-        if(page < 1){
+
+    private void validatePage(int page) {
+        if (page < 1) {
             throw new BadRequestException("Invalid page.");
         }
     }

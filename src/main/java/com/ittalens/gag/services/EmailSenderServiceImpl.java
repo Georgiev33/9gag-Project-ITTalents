@@ -11,11 +11,12 @@ import javax.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
 
 @Service
-public class EmailSenderService {
+public class EmailSenderServiceImpl implements IEmailSenderService{
 
     @Autowired
     private JavaMailSender mailSender;
 
+    @Override
     public void sendVerificationEmail(User user) {
 
         new Thread(() -> {

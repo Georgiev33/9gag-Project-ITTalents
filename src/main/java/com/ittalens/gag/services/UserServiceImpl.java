@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class UserService {
+public class UserServiceImpl implements IUserService{
     @Autowired
     private final UserRepository repository;
     @Autowired
@@ -30,12 +30,13 @@ public class UserService {
     @Autowired
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     @Autowired
-    private final EmailSenderService emailSenderService;
+    private final EmailSenderServiceImpl emailSenderServiceImpl;
     @Autowired
     private final PostRepository postRepository;
     @Autowired
     private final CommentRepository commentRepository;
 
+    @Override
     public void registerUser(RegisterUserDTO u) {
         u.setUserName(u.getUserName().trim());
         u.setPassword(u.getPassword().trim());
@@ -59,14 +60,16 @@ public class UserService {
         user.setVerificationCode(verificationCode);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         repository.save(user);
-        emailSenderService.sendVerificationEmail(user);
+        emailSenderServiceImpl.sendVerificationEmail(user);
     }
 
+    @Override
     public UserWithoutPasswordDTO getUserById(long id) {
         User user = findById(id);
         return mapper.map(user, UserWithoutPasswordDTO.class);
     }
 
+    @Override
     @Transactional
     public void delete(long id) {
         User u = findById(id);
@@ -84,6 +87,7 @@ public class UserService {
         commentRepository.deleteAllByCreatedBy(u.getId());
     }
 
+    @Override
     public UserWithoutPasswordDTO edit(long userId, EditUserDTO editUserDTO) {
         User u = findById(userId);
         if (editUserDTO.getUserName() != null && !editUserDTO.getUserName().equals(u.getUserName())) {
@@ -114,6 +118,7 @@ public class UserService {
         return mapper.map(u, UserWithoutPasswordDTO.class);
     }
 
+    @Override
     public UserWithoutPasswordDTO editPass(ChangePasswordDTO userDTO, long id) {
         User u = findById(id);
         if (!bCryptPasswordEncoder.matches(userDTO.getCurrentPassword(), u.getPassword())) {
@@ -127,6 +132,7 @@ public class UserService {
         return mapper.map(u, UserWithoutPasswordDTO.class);
     }
 
+    @Override
     public UserWithoutPasswordDTO login(UserLoginDTO userDTO) {
         User user = repository.findUserByUserName(userDTO.getUsername()).orElseThrow(() -> new NotFoundException("User or password doesn't match."));
         if (!bCryptPasswordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
@@ -139,12 +145,14 @@ public class UserService {
         return mapper.map(user, UserWithoutPasswordDTO.class);
     }
 
+    @Override
     public List<UserWithoutPasswordDTO> getAllUsers() {
         return repository.findAll().
                 stream().map(user -> mapper.map(user, UserWithoutPasswordDTO.class)).
                 collect(Collectors.toList());
     }
 
+    @Override
     public UserWithoutPasswordDTO comparingVerificationCode(String code) {
         User user = repository.findByVerificationCode(code).orElseThrow(() -> new UnauthorizedException("Not correct verification code"));
         user.setActive(true);

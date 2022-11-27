@@ -19,10 +19,11 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class FileStoreService {
+public class FileStoreServiceImpl implements IFileStoreService{
 
     private static final List<String> AVAILABLE_FILE_TYPE = Arrays.asList("jpg", "png", "mp4", "m4v");
 
+    @Override
     public String saveFile(MultipartFile file,Long uid) {
         String ext = FilenameUtils.getExtension(file.getOriginalFilename());
 
@@ -46,6 +47,7 @@ public class FileStoreService {
         }
     }
 
+    @Override
     public File getFile(String pathToFile) {
         File file = new File("uploads" + File.separator + pathToFile);
         if (!file.exists()) {

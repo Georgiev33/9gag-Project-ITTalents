@@ -1,7 +1,7 @@
 package com.ittalens.gag.controller;
 
 import com.ittalens.gag.model.dto.comments.*;
-import com.ittalens.gag.services.CommentService;
+import com.ittalens.gag.services.CommentServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ import java.nio.file.Files;
 public class CommentController {
 
     @Autowired
-    private final CommentService commentService;
+    private final CommentServiceImpl commentService;
 
     @GetMapping("/post/{pid}")
     private ResponseEntity<?> getAllPostComments(@PathVariable long pid,@RequestParam(name = "page", defaultValue = "1") int page,

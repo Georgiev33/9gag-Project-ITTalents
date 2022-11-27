@@ -18,7 +18,7 @@ public class SecurityFilter implements Filter {
 
     private static final List<String> AVAILABLE_URI = Arrays.asList(
             "/users/register",
-            "/users/verify",
+            "/users/verify/",
             "/users/auth",
             "/posts/all");
 
@@ -28,7 +28,7 @@ public class SecurityFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String requestURI = request.getRequestURI();
 
-        if (AVAILABLE_URI.contains(requestURI)) {
+        if (AVAILABLE_URI.contains(requestURI)|| requestURI.startsWith("/users/verify/")) {
             chain.doFilter(servletRequest, servletResponse);
             return;
         }

@@ -9,10 +9,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class TagService {
+public class TagServiceImpl implements ITagService {
     @Autowired
     public final TagRepository tagRepository;
 
+    @Override
     public void createdTag(TagCreatedDTO tagCreatedDto) {
         String tagType = tagCreatedDto.getTagType().toUpperCase();
         TagEntity tagEntity = new TagEntity();

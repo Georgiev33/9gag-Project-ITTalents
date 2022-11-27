@@ -12,6 +12,7 @@ import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,9 +23,9 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class CommentService {
+public class CommentServiceImpl implements ICommentService{
     @Autowired
-    private final FileStoreService fileStoreService;
+    private final FileStoreServiceImpl fileStoreServiceImpl;
 
     @Autowired
     private final CommentRepository commentRepository;
@@ -41,13 +42,18 @@ public class CommentService {
     @Autowired
     private CommentDAO dao;
 
+    @Autowired
+    private ServerProperties serverProperties;
 
+    private int port = serverProperties.getPort();
+
+    @Override
     public CommentResponseDTO createComment(ParentCommentDTO parentCommentDto, Long userId) {
         CommentEntity commentEntity = new CommentEntity();
         boolean hasFile = false;
         if (parentCommentDto.getFile() != null) {
             MultipartFile originalFile = parentCommentDto.getFile();
-            String internalFileName = fileStoreService.saveFile(originalFile, userId);
+            String internalFileName = fileStoreServiceImpl.saveFile(originalFile, userId);
             commentEntity.setResourcePath(internalFileName);
             hasFile = true;
         }
@@ -67,11 +73,12 @@ public class CommentService {
         commentRepository.save(commentEntity);
         CommentResponseDTO commentResponseDTO = mapper.map(commentEntity, CommentResponseDTO.class);
         if (hasFile) {
-            commentResponseDTO.setResourceURL("http://localhost:8080/comment/download/" + commentResponseDTO.getId());
+            commentResponseDTO.setResourceURL("http://localhost:"+ port +"/comment/download/" + commentResponseDTO.getId());
         }
         return commentResponseDTO;
     }
 
+    @Override
     public CommentReactionRespDTO react(Long userId, Long commentId, boolean status) {
         User user = findUserById(userId);
         CommentEntity commentEntity = findCommentById(commentId);
@@ -98,13 +105,14 @@ public class CommentService {
 
     }
 
+    @Override
     public ChildCommentResponseDTO createChildComment(ChildCommentDTO childCommentDTO, Long uId, Long cid) {
         MultipartFile file = childCommentDTO.getFile();
         CommentEntity comment = new CommentEntity();
         CommentEntity parentComment = findCommentById(cid);
 
         if (file != null) {
-            String internalFileName = fileStoreService.saveFile(file, uId);
+            String internalFileName = fileStoreServiceImpl.saveFile(file, uId);
             comment.setResourcePath(internalFileName);
         }
 
@@ -123,6 +131,7 @@ public class CommentService {
         return responseDTO;
     }
 
+    @Override
     public EditCommentDTO editComment(long cid, EditCommentDTO commentDTO, Long userId) {
         CommentEntity comment = findCommentById(cid);
         if (!comment.getCreatedBy().equals(userId)){
@@ -134,17 +143,20 @@ public class CommentService {
         return commentDTO;
     }
 
+    @Override
     public CommentResponseDTO getCommentById(long cid) {
         CommentEntity comment = findCommentById(cid);
         return mapper.map(comment, CommentResponseDTO.class);
     }
 
+    @Override
     public Page<CommentResponseDTO> getAllCommentReplies(long cid, int offset, int pageSize) {
         validatePage(offset);
         Page<CommentEntity> commentEntityPage = commentRepository.findAllByCommentEntityIdOrderByCreatedAtDesc(cid, PageRequest.of((offset - 1), pageSize));
         return mapCommentToDTO(commentEntityPage);
     }
 
+    @Override
     public Page<CommentResponseDTO> getAllPostComments(long pid, String commentOrder, int offset, int pageSize) {
         validatePage(offset);
         if (commentOrder.toLowerCase().equals("fresh")) {
@@ -157,6 +169,7 @@ public class CommentService {
         throw new BadRequestException("No such filter.");
     }
 
+    @Override
     public void deleteComment(long cid, Long userId) {
         CommentEntity comment = findCommentById(cid);
         if (!comment.getCreatedBy().equals(userId)){
@@ -186,13 +199,13 @@ public class CommentService {
 
     private void setURL(Page<CommentResponseDTO> commentResponseDTOS) {
         for (CommentResponseDTO comment : commentResponseDTOS) {
-            comment.setResourceURL("http://localhost:8080/comment/download/" + comment.getId());
+            comment.setResourceURL("http://localhost:" + port + "/comment/download/" + comment.getId());
         }
     }
 
     public File takeFile(Long cid) {
         String filePath = commentRepository.takeFilePath(cid);
-        return fileStoreService.getFile(filePath);
+        return fileStoreServiceImpl.getFile(filePath);
     }
 
     private Page<CommentResponseDTO> mapCommentToDTO(Page<CommentEntity> commentsPage) {

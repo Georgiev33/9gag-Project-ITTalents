@@ -4,7 +4,7 @@ import com.ittalens.gag.model.dto.posts.PostCreateReqDTO;
 import com.ittalens.gag.model.dto.posts.PostReactionDTO;
 import com.ittalens.gag.model.dto.posts.PostReactionResponseDTO;
 import com.ittalens.gag.model.dto.posts.PostRespDTO;
-import com.ittalens.gag.services.PostService;
+import com.ittalens.gag.services.PostServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,38 +23,38 @@ import java.nio.file.Files;
 public class PostController {
 
     @Autowired
-    private final PostService postService;
+    private final PostServiceImpl postServiceImpl;
 
     @PostMapping("/upload")
     private ResponseEntity<PostRespDTO> uploadFile(@ModelAttribute PostCreateReqDTO dto, HttpSession session) {
         Long userId =  Long.parseLong(session.getAttribute("USER_ID").toString());
-        return ResponseEntity.ok( postService.createPost(dto,userId));
+        return ResponseEntity.ok( postServiceImpl.createPost(dto,userId));
     }
 
     @GetMapping("/all")
     private Page<PostRespDTO> getAllPosts(@RequestParam(name = "page", defaultValue = "1") int offset,
                                           @RequestParam(name = "per_page", defaultValue = "10") int pageSize) {
-        return postService.findAllSortedByReactionCount(offset, pageSize);
+        return postServiceImpl.findAllSortedByReactionCount(offset, pageSize);
     }
 
     @GetMapping("/date")
     private Page<PostRespDTO> getAllPostsByDateAndTime(@RequestParam(name = "page", defaultValue = "1") int offset,
                                                        @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
                                                        @RequestParam(name = "sorted_type", defaultValue = "fresh") String sortType) {
-        return postService.getAllByCreationDate(offset, pageSize, sortType);
+        return postServiceImpl.getAllByCreationDate(offset, pageSize, sortType);
     }
 
     @GetMapping("/word")
     private ResponseEntity<?> getAllPostsByWord(@RequestParam(name = "word", defaultValue = "") String word,
                                                 @RequestParam(name = "page", defaultValue = "1") int offset,
                                                 @RequestParam(name = "per_page", defaultValue = "10") int pageSize) {
-        return ResponseEntity.ok(postService.findPostsByWord(word, offset, pageSize));
+        return ResponseEntity.ok(postServiceImpl.findPostsByWord(word, offset, pageSize));
     }
 
     @DeleteMapping("/{id}")
     private ResponseEntity<?> deletedPost(@PathVariable Long id, HttpSession session) {
         Long userId = Long.parseLong(session.getAttribute("USER_ID").toString());
-        postService.deletedPostById(id,userId);
+        postServiceImpl.deletedPostById(id,userId);
         return ResponseEntity.ok("Successfully deleted your post!");
     }
 
@@ -62,21 +62,21 @@ public class PostController {
     private ResponseEntity<PostReactionResponseDTO> react(@PathVariable long pid,
                                                           @RequestBody PostReactionDTO reactionDTO,
                                                           HttpSession session) {
-        return ResponseEntity.ok(postService.react(pid, Long.parseLong(session.getAttribute("USER_ID").toString()), reactionDTO.isStatus()));
+        return ResponseEntity.ok(postServiceImpl.react(pid, Long.parseLong(session.getAttribute("USER_ID").toString()), reactionDTO.isStatus()));
     }
 
     @GetMapping("/download/{pid}")
     @SneakyThrows
     private void downloadPostById(@PathVariable String pid,
                                   HttpServletResponse response) {
-        File file = postService.takeFile(pid);
+        File file = postServiceImpl.takeFile(pid);
         response.setContentType(Files.probeContentType(file.toPath()));
         Files.copy(file.toPath(), response.getOutputStream());
     }
 
     @GetMapping("/post/{pid}")
     private ResponseEntity<PostRespDTO> getPostById(@PathVariable String pid) {
-        PostRespDTO postRespDTO = postService.getPostById(pid);
+        PostRespDTO postRespDTO = postServiceImpl.getPostById(pid);
         return ResponseEntity.ok(postRespDTO);
     }
 
@@ -85,7 +85,7 @@ public class PostController {
                                                   @RequestParam(name = "page", defaultValue = "1") int offset,
                                                   @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
                                                   @RequestParam(name = "sorted_type") String sortType) {
-        return postService.getAllPostsCategory(categoryId, offset, pageSize, sortType);
+        return postServiceImpl.getAllPostsCategory(categoryId, offset, pageSize, sortType);
     }
 
     @GetMapping("/tag")
@@ -93,6 +93,6 @@ public class PostController {
                                                   @RequestParam(name = "page", defaultValue = "1") int offset,
                                                   @RequestParam(name = "per_page", defaultValue = "10") int pageSize,
                                                   @RequestParam(name = "sorted_type", defaultValue = "fresh") String sortType) {
-        return postService.allPostsWithTag(type.toUpperCase(), offset, pageSize, sortType);
+        return postServiceImpl.allPostsWithTag(type.toUpperCase(), offset, pageSize, sortType);
     }
 }
