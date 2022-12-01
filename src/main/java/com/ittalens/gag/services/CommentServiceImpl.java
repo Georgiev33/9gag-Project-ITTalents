@@ -12,7 +12,6 @@ import com.ittalens.gag.model.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,12 +39,10 @@ public class CommentServiceImpl implements ICommentService{
     private final ModelMapper mapper;
 
     @Autowired
-    private CommentDAO dao;
+    private final CommentDAO dao;
 
     @Autowired
-    private ServerProperties serverProperties;
-
-    private int port = serverProperties.getPort();
+    private final ConfigPropertiesService configPropertiesService;
 
     @Override
     public CommentResponseDTO createComment(ParentCommentDTO parentCommentDto, Long userId) {
@@ -73,7 +70,7 @@ public class CommentServiceImpl implements ICommentService{
         commentRepository.save(commentEntity);
         CommentResponseDTO commentResponseDTO = mapper.map(commentEntity, CommentResponseDTO.class);
         if (hasFile) {
-            commentResponseDTO.setResourceURL("http://localhost:"+ port +"/comment/download/" + commentResponseDTO.getId());
+            commentResponseDTO.setResourceURL("http://localhost:"+ configPropertiesService.getServerPort() +"/comment/download/" + commentResponseDTO.getId());
         }
         return commentResponseDTO;
     }
@@ -199,7 +196,7 @@ public class CommentServiceImpl implements ICommentService{
 
     private void setURL(Page<CommentResponseDTO> commentResponseDTOS) {
         for (CommentResponseDTO comment : commentResponseDTOS) {
-            comment.setResourceURL("http://localhost:" + port + "/comment/download/" + comment.getId());
+            comment.setResourceURL("http://localhost:" + configPropertiesService.getServerPort() + "/comment/download/" + comment.getId());
         }
     }
 

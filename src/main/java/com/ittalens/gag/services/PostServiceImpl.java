@@ -52,9 +52,11 @@ public class PostServiceImpl implements IPostService {
     @Autowired
     private final PostDAO dao;
     @Autowired
-    private ServerProperties serverProperties;
-
-    private final int port = serverProperties.getPort();
+    private final ConfigPropertiesService configPropertiesService;
+    @Autowired
+    private final EmailSenderServiceImpl emailSenderService;
+    @Autowired
+    private final UserServiceImpl userService;
 
     @Override
     public PostRespDTO createPost(PostCreateReqDTO postDto, Long userId) {
@@ -75,7 +77,8 @@ public class PostServiceImpl implements IPostService {
         postRepository.save(postEntity);
 
         PostRespDTO postRespDTO = modelMapper.map(postEntity, PostRespDTO.class);
-        postRespDTO.setResourceURL("http://localhost:" + port + "/posts/download/" + postRespDTO.getId());
+        postRespDTO.setResourceURL("http://localhost:" + configPropertiesService.getServerPort() + "/posts/download/" + postRespDTO.getId());
+        emailSenderService.sendSuccessfulUploadPost(userService.getUserById(userId));
         return postRespDTO;
     }
 
@@ -150,7 +153,7 @@ public class PostServiceImpl implements IPostService {
         Long postId = Long.parseLong(pid);
         PostEntity post = postRepository.findById(postId).orElseThrow(() -> new NotFoundException("This post does not exist"));
         PostRespDTO postRespDTO = modelMapper.map(post, PostRespDTO.class);
-        postRespDTO.setResourceURL("http://localhost:" + port + "/posts/download/" + postRespDTO.getId());
+        postRespDTO.setResourceURL("http://localhost:" + configPropertiesService.getServerPort() + "/posts/download/" + postRespDTO.getId());
         setReactions(postRespDTO);
         return postRespDTO;
     }
@@ -238,7 +241,7 @@ public class PostServiceImpl implements IPostService {
 
     private void setURL(Page<PostRespDTO> postDtos) {
         for (PostRespDTO postRespDTO : postDtos) {
-            postRespDTO.setResourceURL("http://localhost:" + port + "/posts/download/" + postRespDTO.getId());
+            postRespDTO.setResourceURL("http://localhost:" + configPropertiesService.getServerPort() + "/posts/download/" + postRespDTO.getId());
             setReactions(postRespDTO);
         }
     }

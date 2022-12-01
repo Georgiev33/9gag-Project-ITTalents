@@ -136,6 +136,12 @@ public class UserServiceImpl implements IUserService{
     public UserWithoutPasswordDTO login(UserLoginDTO userDTO) {
         User user = repository.findUserByUserName(userDTO.getUsername()).orElseThrow(() -> new NotFoundException("User or password doesn't match."));
         if (!bCryptPasswordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
+            user.setCounterPassword(user.getCounterPassword() + 1);
+            if (user.getCounterPassword() >= 3){
+                user.setActive(false);
+                emailSenderServiceImpl.sendBlockingUser(user);
+            }
+            repository.save(user);
             throw new BadRequestException("User or password doesn't match.");
         }
 

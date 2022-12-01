@@ -28,7 +28,7 @@ public class SecurityFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String requestURI = request.getRequestURI();
 
-        if (AVAILABLE_URI.contains(requestURI)|| requestURI.startsWith("/users/verify/")) {
+        if (AVAILABLE_URI.contains(requestURI) || requestURI.startsWith("/users/verify/")) {
             chain.doFilter(servletRequest, servletResponse);
             return;
         }

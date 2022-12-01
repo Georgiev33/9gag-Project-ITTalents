@@ -34,6 +34,8 @@ public class User {
     private List<UserPostReaction> reactedPosts;
     @OneToMany(mappedBy = "comment")
     private List<UserCommentReactionEntity> reactedComment;
+    @Column
+    private int counterPassword;
 
 
 }
